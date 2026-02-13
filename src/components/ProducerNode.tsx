@@ -4,22 +4,39 @@ interface ProducerNodeProps {
   data: { label: string };
 }
 
-// ProducerNode: Red box representing a Kafka producer
+// ProducerNode: Aircraft icon representing a Kafka producer
 const ProducerNode = ({ data }: ProducerNodeProps) => {
+
   return (
     <div
       style={{
-        padding: '10px 20px',
-        borderRadius: '8px',
-        background: '#ef5350',
-        color: 'white',
-        border: '2px solid #c62828',
-        minWidth: '120px',
-        textAlign: 'center',
-        fontWeight: 'bold',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '8px',
+        minWidth: '80px',
       }}
     >
-      {data.label}
+      {/* Aircraft SVG icon */}
+      <svg
+        width="48"
+        height="48"
+        viewBox="0 0 24 24"
+        fill="#ef5350"
+        style={{ marginBottom: '4px', transform: 'rotate(90deg)' }}
+      >
+        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+      </svg>
+      <span
+        style={{
+          fontSize: '12px',
+          fontWeight: 'bold',
+          color: '#333',
+          textAlign: 'center',
+        }}
+      >
+        {data.label}
+      </span>
       {/* Output handle on the right - connects to Topics */}
       <Handle type="source" position={Position.Right} />
     </div>
