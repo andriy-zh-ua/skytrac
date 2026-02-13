@@ -1,0 +1,31 @@
+import { Handle, Position } from '@xyflow/react';
+
+interface PartitionNodeProps {
+  data: { label: string };
+}
+
+// PartitionNode: Purple box representing a Kafka partition
+const PartitionNode = ({ data }: PartitionNodeProps) => {
+  return (
+    <div
+      style={{
+        padding: '10px 20px',
+        borderRadius: '8px',
+        background: '#ab47bc',
+        color: 'white',
+        border: '2px solid #7b1fa2',
+        minWidth: '120px',
+        textAlign: 'center',
+        fontWeight: 'bold',
+      }}
+    >
+      {data.label}
+      {/* Input handle on the left */}
+      <Handle type="target" position={Position.Left} />
+      {/* Output handle on the right */}
+      <Handle type="source" position={Position.Right} />
+    </div>
+  );
+};
+
+export default PartitionNode;

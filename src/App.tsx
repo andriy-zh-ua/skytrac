@@ -18,12 +18,16 @@ import { AppBar, Toolbar, Button, Typography, Box } from '@mui/material';
 import ProducerNode from './components/ProducerNode';
 import TopicNode from './components/TopicNode';
 import ConsumerNode from './components/ConsumerNode';
+import BrokerNode from './components/BrokerNode';
+import PartitionNode from './components/PartitionNode';
 
 // Register custom node types
 const nodeTypes = {
   producer: ProducerNode,
   topic: TopicNode,
   consumer: ConsumerNode,
+  broker: BrokerNode,
+  partition: PartitionNode,
 };
 
 // Initial empty canvas
@@ -40,6 +44,8 @@ const App = () => {
     producer: 0,
     topic: 0,
     consumer: 0,
+    broker: 0,
+    partition: 0,
   });
 
   // Handle new connections between nodes
@@ -49,7 +55,7 @@ const App = () => {
   );
 
   // Add a new node of the specified type
-  const addNode = (type: 'producer' | 'topic' | 'consumer') => {
+  const addNode = (type: 'producer' | 'topic' | 'consumer' | 'broker' | 'partition') => {
     const newCount = counters[type] + 1;
     setCounters({ ...counters, [type]: newCount });
 
@@ -97,6 +103,12 @@ const App = () => {
           </Button>
           <Button color="inherit" onClick={() => addNode('consumer')}>
             Add Consumer
+          </Button>
+          <Button color="inherit" onClick={() => addNode('broker')}>
+            Add Broker
+          </Button>
+          <Button color="inherit" onClick={() => addNode('partition')}>
+            Add Partition
           </Button>
           <Button color="inherit" variant="outlined" sx={{ ml: 2 }} onClick={exportSchema}>
             Export Schema
