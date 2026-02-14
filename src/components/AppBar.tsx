@@ -17,7 +17,11 @@ const CustomAppBar: React.FC<AppBarProps> = ({ onAddNode, hasBrokers, onExportSc
         <Button color="inherit" onClick={() => onAddNode('producer')}>
           Add Producer
         </Button>
-        <Button color="inherit" onClick={() => onAddNode('topic')}>
+        <Button 
+          color="inherit" 
+          onClick={() => onAddNode('topic')}
+          disabled={!hasBrokers}
+        >
           Add Topic
         </Button>
         <Button color="inherit" onClick={() => onAddNode('consumer')}>
