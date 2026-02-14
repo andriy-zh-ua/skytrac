@@ -1,14 +1,16 @@
 import { useState, useCallback } from 'react';
 import {
   ReactFlow,
+  Node,
+  Edge,
+  NodeChange,
+  applyNodeChanges,
   addEdge,
   MiniMap,
   Controls,
   Background,
   useNodesState,
   useEdgesState,
-  type Node,
-  type Edge,
   type OnConnect,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -31,8 +33,55 @@ const initialEdges: Edge[] = [];
 
 const App = () => {
   // React Flow state hooks
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes as any);
+  const [nodes, setNodes, onNodesChangeOriginal] = useNodesState(initialNodes as any);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges as any);
+
+  // Custom onNodesChange that handles broker-partition movement
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      setNodes((nds) => {
+        let updatedNodes = applyNodeChanges(changes, nds);
+        
+        // Check if any broker was moved
+        const brokerChanges = changes.filter((change: NodeChange) => 
+          change.type === 'position' && 
+          nds.find((n: Node) => n.id === change.id && n.type === 'broker')
+        );
+        
+        if (brokerChanges.length > 0) {
+          // Move associated partitions with their brokers
+          updatedNodes = updatedNodes.map((node: Node) => {
+            if (node.type === 'partition') {
+              // Find the broker this partition belongs to
+              const broker = nds.find((n: Node) => n.id === node.data.brokerId && n.type === 'broker');
+              if (broker) {
+                // Find the corresponding updated broker
+                const updatedBroker = updatedNodes.find((n: Node) => n.id === broker.id && n.type === 'broker');
+                if (updatedBroker) {
+                  // Calculate the position difference
+                  const deltaX = updatedBroker.position.x - broker.position.x;
+                  const deltaY = updatedBroker.position.y - broker.position.y;
+                  
+                  // Move the partition by the same amount
+                  return {
+                    ...node,
+                    position: {
+                      x: node.position.x + deltaX,
+                      y: node.position.y + deltaY
+                    }
+                  };
+                }
+              }
+            }
+            return node;
+          });
+        }
+        
+        return updatedNodes;
+      });
+    },
+    []
+  );
   const [counters, setCounters] = useState({
     producer: 0,
     topic: 0,
@@ -56,6 +105,7 @@ const App = () => {
     [setEdges]
   );
 
+  
   // Handle node deletion - remove associated partitions when broker is deleted
   const onNodesDelete = useCallback(
     (nodesToDelete: Node[]) => {
