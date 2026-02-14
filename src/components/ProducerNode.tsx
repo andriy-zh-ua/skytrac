@@ -28,6 +28,10 @@ const ProducerNode = ({ data, onClick, onDoubleClick, hasConnections }: Producer
     if (hasConnections && onDoubleClick) {
       onDoubleClick();
     }
+    // Also select the producer when activate/deactivate button is clicked
+    if (onClick) {
+      onClick();
+    }
   };
 
   return (
