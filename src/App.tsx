@@ -72,11 +72,15 @@ const App = () => {
     if (type === 'broker') {
       position = { x: 100 + (counters[type] * 300), y: 100 }; // 300px spacing for side-by-side
     } else if (type === 'partition') {
+      // Check if there are any brokers on the canvas
+      const brokers = nodes.filter(node => node.type === 'broker');
+      if (brokers.length === 0) {
+        return;
+      }
+      
       // Get current broker from currentObjects state
       const currentBrokerId = currentObjects.broker;
-      console.log('Debug - currentBrokerId:', currentBrokerId);
       const selectedBroker = currentBrokerId ? nodes.find(n => n.id === currentBrokerId) : null;
-      console.log('Debug - selectedBroker:', selectedBroker);
       
       if (selectedBroker) {
         // Find existing partitions in this broker
@@ -157,7 +161,6 @@ const App = () => {
     );
 
     if (!hasPartitionConnection) {
-      console.log('Producer must be connected to a partition to activate');
       return;
     }
 
@@ -257,7 +260,11 @@ const App = () => {
           <Button color="inherit" onClick={() => addNode('broker')}>
             Add Broker
           </Button>
-          <Button color="inherit" onClick={() => addNode('partition')}>
+          <Button 
+            color="inherit" 
+            onClick={() => addNode('partition')}
+            disabled={nodes.filter(node => node.type === 'broker').length === 0}
+          >
             Add Partition
           </Button>
           <Button color="inherit" variant="outlined" sx={{ ml: 2 }} onClick={exportSchema}>
