@@ -15,12 +15,12 @@ code {
 /* Animated data flow from producer to target */
 @keyframes dataFlow {
   0% {
-    stroke-dasharray: 10 90;
+    stroke-dasharray: 5 999;
     stroke-dashoffset: 0;
   }
   100% {
-    stroke-dasharray: 10 90;
-    stroke-dashoffset: -100;
+    stroke-dasharray: 5 999;
+    stroke-dashoffset: -1000;
   }
 }
 
@@ -35,7 +35,7 @@ code {
 .react-flow__edge.animated-flow path {
   stroke: #1976d2;
   stroke-width: 3;
-  stroke-dasharray: 10 90;
+  stroke-dasharray: 5 999;
   stroke-dashoffset: 0;
   animation: dataFlow 1s linear infinite;
 }
