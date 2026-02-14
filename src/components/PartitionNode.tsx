@@ -15,7 +15,7 @@ const PartitionNode = ({ data, onClick }: PartitionNodeProps) => {
         borderRadius: '8px',
         background: '#ab47bc',
         color: 'white',
-        border: '2px solid #7b1fa2',
+        border: 'none',
         minWidth: '120px',
         textAlign: 'center',
         fontWeight: 'bold',

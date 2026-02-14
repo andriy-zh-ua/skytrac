@@ -62,7 +62,7 @@ const App = () => {
                   const deltaX = updatedBroker.position.x - broker.position.x;
                   const deltaY = updatedBroker.position.y - broker.position.y;
                   
-                  // Move the partition by the same amount
+                  // Move the partition by the same amount, maintaining centered position
                   return {
                     ...node,
                     position: {
@@ -243,7 +243,7 @@ const App = () => {
         nodeData.brokerId = selectedBroker.id; // Track which broker this partition belongs to
         
         position = { 
-          x: selectedBroker.position.x + 15, // Inside broker with padding offset
+          x: selectedBroker.position.x + 40, // Center horizontally inside 200px broker (200px - 120px partition width) / 2 = 40px
           y: lowestY + 50 // Place below the lowest partition with increased spacing
         };
       } else {
@@ -337,7 +337,7 @@ const App = () => {
     },
     topic: (props: any) => <TopicNode {...props} onClick={() => selectNode(props.id)} />,
     consumer: (props: any) => <ConsumerNode {...props} onClick={() => selectNode(props.id)} />,
-    broker: (props: any) => <BrokerNode {...props} onClick={() => selectNode(props.id)} />,
+    broker: (props: any) => <BrokerNode {...props} selected={props.selected} isCurrentBroker={currentObjects.broker === props.id} onClick={() => selectNode(props.id)} />,
     partition: (props: any) => <PartitionNode {...props} onClick={() => selectNode(props.id)} />,
   };
 
