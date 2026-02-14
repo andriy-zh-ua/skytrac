@@ -67,19 +67,22 @@ const App = () => {
       id: `${type}-${Date.now()}`,
       type,
       position,
-      data: { label, selected: true },
-      className: 'selected',
+      data: { label },
+      selected: true, // Use React Flow's built-in selected property
       zIndex: type === 'broker' ? -1 : 1000, // Keep brokers in background
     };
 
-    setNodes((nds) => [
-      ...nds.map(node => ({ 
-        ...node, 
-        data: { ...node.data, selected: false },
-        className: undefined
-      })),
-      newNode
-    ]);
+    setNodes((nds) => {
+      const updatedNodes = [
+        ...nds.map(node => ({ 
+          ...node, 
+          selected: false, // Use React Flow's selected property
+          zIndex: undefined // Reset z-index for deselected nodes
+        })),
+        newNode
+      ];
+      return updatedNodes;
+    });
   };
 
   // Simple selection function - select one node, deselect others
@@ -89,14 +92,13 @@ const App = () => {
         node.id === nodeId
           ? { 
               ...node, 
-              data: { ...node.data, selected: true },
-              className: 'selected',
+              selected: true, // Use React Flow's selected property
               zIndex: node.type === 'broker' ? -1 : 1000, // Keep brokers in background
             }
           : { 
               ...node, 
-              data: { ...node.data, selected: false },
-              className: undefined
+              selected: false, // Use React Flow's selected property
+              zIndex: undefined
             }
       )
     );
@@ -104,7 +106,7 @@ const App = () => {
 
   // Get selected producer IDs
   const selectedProducers = nodes
-    .filter(node => node.type === 'producer' && node.data.selected)
+    .filter(node => node.type === 'producer' && node.selected)
     .map(node => node.id);
 
   // Register custom node types with click handlers
