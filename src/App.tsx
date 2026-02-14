@@ -67,7 +67,7 @@ const App = () => {
       id: `${type}-${Date.now()}`,
       type,
       position,
-      data: { label },
+      data: { label, active: false }, // Initialize active as false for producers
       selected: true, // Use React Flow's built-in selected property
       zIndex: type === 'broker' ? -1 : 1000, // Keep brokers in background
     };
@@ -104,9 +104,41 @@ const App = () => {
     );
   };
 
+  // Toggle producer active state (green/transmitting) - only if connected to partition
+  const toggleProducerActive = (nodeId: string) => {
+    // Check if producer has connection to a partition
+    const hasPartitionConnection = edges.some(edge => 
+      edge.source === nodeId && 
+      nodes.some(node => node.id === edge.target && node.type === 'partition')
+    );
+
+    if (!hasPartitionConnection) {
+      console.log('Producer must be connected to a partition to activate');
+      return;
+    }
+
+    setNodes((nds) => {
+      const updatedNodes = nds.map((node) =>
+        node.id === nodeId && node.type === 'producer'
+          ? { 
+              ...node, 
+              data: { ...node.data, active: !node.data.active }
+            }
+          : node
+      );
+      console.log('Toggle producer active:', updatedNodes.filter(n => n.type === 'producer').map(n => ({ id: n.id, active: n.data.active })));
+      return updatedNodes;
+    });
+  };
+
   // Get selected producer IDs
   const selectedProducers = nodes
     .filter(node => node.type === 'producer' && node.selected)
+    .map(node => node.id);
+
+  // Get active producer IDs (green, transmitting)
+  const activeProducers = nodes
+    .filter(node => node.type === 'producer' && node.data.active)
     .map(node => node.id);
 
   // Register custom node types with click handlers
@@ -118,6 +150,7 @@ const App = () => {
           {...props} 
           hasConnections={hasConnections}
           onClick={() => hasConnections ? selectNode(props.id) : undefined} 
+          onDoubleClick={() => hasConnections ? toggleProducerActive(props.id) : undefined} 
         />
       );
     },
@@ -127,9 +160,9 @@ const App = () => {
     partition: (props: any) => <PartitionNode {...props} onClick={() => selectNode(props.id)} />,
   };
 
-  // Update edges with animation for selected producers
+  // Update edges with animation for active producers
   const updatedEdges = edges.flatMap(edge => {
-    if (selectedProducers.includes(edge.source)) {
+    if (activeProducers.includes(edge.source)) {
       // Calculate number of pulses needed based on interval and duration
       const numPulses = Math.ceil(animationConfig.pulseDuration / animationConfig.pulseInterval);
       const pulseEdges = [
