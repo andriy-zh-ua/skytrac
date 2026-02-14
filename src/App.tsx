@@ -153,7 +153,19 @@ const App = () => {
     };
     
     if (type === 'broker') {
-      position = { x: 100 + (counters[type] * 300), y: 100 }; // 300px spacing for side-by-side
+      // Find the rightmost existing broker
+      const existingBrokers = nodes.filter(node => node.type === 'broker');
+      let xPosition = 100; // Default position for first broker
+      
+      if (existingBrokers.length > 0) {
+        // Find the broker with the highest x position
+        const rightmostBroker = existingBrokers.reduce((rightmost, broker) => 
+          broker.position.x > rightmost.position.x ? broker : rightmost
+        );
+        xPosition = rightmostBroker.position.x + 300; // 300px spacing to the right
+      }
+      
+      position = { x: xPosition, y: 100 };
     } else if (type === 'partition') {
       // Check if there are any brokers on the canvas
       const brokers = nodes.filter(node => node.type === 'broker');
