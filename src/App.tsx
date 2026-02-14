@@ -21,15 +21,6 @@ import ConsumerNode from './components/ConsumerNode';
 import BrokerNode from './components/BrokerNode';
 import PartitionNode from './components/PartitionNode';
 
-// Register custom node types
-const nodeTypes = {
-  producer: ProducerNode,
-  topic: TopicNode,
-  consumer: ConsumerNode,
-  broker: BrokerNode,
-  partition: PartitionNode,
-};
-
 // Initial empty canvas
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
@@ -64,10 +55,30 @@ const App = () => {
       id: `${type}-${Date.now()}`,
       type,
       position: { x: Math.random() * 400 + 50, y: Math.random() * 300 + 50 },
-      data: { label },
+      data: { label, selected: false },
     };
 
     setNodes((nds) => [...nds, newNode]);
+  };
+
+  // Toggle producer selection state
+  const toggleProducerSelection = (nodeId: string) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId && node.type === 'producer'
+          ? { ...node, data: { ...node.data, selected: !node.data.selected } }
+          : node
+      )
+    );
+  };
+
+  // Register custom node types with access to toggleProducerSelection
+  const nodeTypes = {
+    producer: (props: any) => <ProducerNode {...props} onClick={() => toggleProducerSelection(props.id)} />,
+    topic: TopicNode,
+    consumer: ConsumerNode,
+    broker: BrokerNode,
+    partition: PartitionNode,
   };
 
   // Export schema as JSON to console
