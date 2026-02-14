@@ -59,14 +59,14 @@ const ProducerNode = ({ data, onClick, onDoubleClick, hasConnections }: Producer
         position={Position.Right}
         style={{ top: '31px', right: '12px' }}
       />
-      <span style={{ fontSize: '12px', marginTop: '4px' }}>{data.label}</span>
+      <span style={{ fontSize: '8px', marginTop: '4px' }}>{data.label}</span>
       
       {/* Activate button - only show if has connections */}
       {hasConnections && (
         <button
           onClick={handleActivate}
           style={{
-            fontSize: '10px',
+            fontSize: '8px',
             padding: '2px 6px',
             marginTop: '4px',
             backgroundColor: data.active ? '#4caf50' : '#f5f5f5',
@@ -75,7 +75,7 @@ const ProducerNode = ({ data, onClick, onDoubleClick, hasConnections }: Producer
             cursor: 'pointer'
           }}
         >
-          {data.active ? 'Active' : 'Activate'}
+          {data.active ? 'Deactivate' : 'Activate'}
         </button>
       )}
     </div>
