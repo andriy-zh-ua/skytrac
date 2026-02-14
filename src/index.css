@@ -46,3 +46,18 @@ code {
   border-radius: 8px;
 }
 
+/* Keep brokers in background using order property */
+.react-flow__node[data-type="broker"] {
+  order: -1 !important;
+}
+
+/* Ensure brokers are always behind other nodes */
+.react-flow__node:not([data-type="broker"]) {
+  order: 1 !important;
+}
+
+/* Alternative: Use transform to push brokers back */
+.react-flow__node[data-type="broker"] {
+  transform: translateZ(-1px) !important;
+}
+

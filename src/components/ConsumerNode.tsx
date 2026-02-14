@@ -9,6 +9,7 @@ interface ConsumerNodeProps {
 const ConsumerNode = ({ data, onClick }: ConsumerNodeProps) => {
   return (
     <div
+      data-type="consumer"
       style={{
         padding: '10px 20px',
         borderRadius: '8px',
@@ -19,7 +20,7 @@ const ConsumerNode = ({ data, onClick }: ConsumerNodeProps) => {
         textAlign: 'center',
         fontWeight: 'bold',
         cursor: 'pointer',
-      }}
+              }}
       onClick={onClick}
     >
       {data.label}

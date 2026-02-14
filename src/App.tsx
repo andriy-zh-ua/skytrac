@@ -72,17 +72,10 @@ const App = () => {
       zIndex: type === 'broker' ? -1 : 1000, // Keep brokers in background
     };
 
-    setNodes((nds) => {
-      const updatedNodes = [
-        ...nds.map(node => ({ 
-          ...node, 
-          selected: false, // Use React Flow's selected property
-          zIndex: undefined // Reset z-index for deselected nodes
-        })),
-        newNode
-      ];
-      return updatedNodes;
-    });
+    setNodes((nds) => [
+      ...nds.map(node => ({ ...node, selected: false })),
+      newNode
+    ]);
   };
 
   // Simple selection function - select one node, deselect others
@@ -90,16 +83,8 @@ const App = () => {
     setNodes((nds) =>
       nds.map((node) =>
         node.id === nodeId
-          ? { 
-              ...node, 
-              selected: true, // Use React Flow's selected property
-              zIndex: node.type === 'broker' ? -1 : 1000, // Keep brokers in background
-            }
-          : { 
-              ...node, 
-              selected: false, // Use React Flow's selected property
-              zIndex: undefined
-            }
+          ? { ...node, selected: true }
+          : { ...node, selected: false }
       )
     );
   };

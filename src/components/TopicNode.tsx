@@ -9,6 +9,7 @@ interface TopicNodeProps {
 const TopicNode = ({ data, onClick }: TopicNodeProps) => {
   return (
     <div
+      data-type="topic"
       style={{
         padding: '10px 20px',
         borderRadius: '8px',
@@ -19,7 +20,7 @@ const TopicNode = ({ data, onClick }: TopicNodeProps) => {
         textAlign: 'center',
         fontWeight: 'bold',
         cursor: 'pointer',
-      }}
+              }}
       onClick={onClick}
     >
       {data.label}

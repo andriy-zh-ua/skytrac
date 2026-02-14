@@ -9,6 +9,7 @@ interface PartitionNodeProps {
 const PartitionNode = ({ data, onClick }: PartitionNodeProps) => {
   return (
     <div
+      data-type="partition"
       style={{
         padding: '10px 20px',
         borderRadius: '8px',
@@ -19,7 +20,7 @@ const PartitionNode = ({ data, onClick }: PartitionNodeProps) => {
         textAlign: 'center',
         fontWeight: 'bold',
         cursor: 'pointer',
-      }}
+              }}
       onClick={onClick}
     >
       {data.label}

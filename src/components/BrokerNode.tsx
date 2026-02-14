@@ -9,6 +9,7 @@ interface BrokerNodeProps {
 const BrokerNode = ({ data, onClick }: BrokerNodeProps) => {
   return (
     <div
+      data-type="broker"
       style={{
         padding: '10px 20px',
         borderRadius: '8px',
@@ -23,7 +24,7 @@ const BrokerNode = ({ data, onClick }: BrokerNodeProps) => {
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-      }}
+              }}
       onClick={onClick}
     >
       {data.label}
