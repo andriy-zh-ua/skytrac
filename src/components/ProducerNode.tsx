@@ -16,7 +16,7 @@ const ProducerNode = ({ data, onClick, onDoubleClick, hasConnections }: Producer
     e.preventDefault();
     e.stopPropagation();
     
-    if (hasConnections && onClick) {
+    if (onClick) {
       onClick();
     }
   };
@@ -39,7 +39,7 @@ const ProducerNode = ({ data, onClick, onDoubleClick, hasConnections }: Producer
         padding: '8px',
         minWidth: '80px',
         position: 'relative',
-        cursor: hasConnections ? 'pointer' : 'not-allowed',
+        cursor: 'pointer',
       }}
       onClick={handleClick}
     >

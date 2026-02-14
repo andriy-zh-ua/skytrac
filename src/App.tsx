@@ -268,7 +268,7 @@ const App = () => {
         <ProducerNode 
           {...props} 
           hasConnections={hasConnections}
-          onClick={() => hasConnections ? selectNode(props.id) : undefined} 
+          onClick={() => selectNode(props.id)} 
           onDoubleClick={() => hasConnections ? toggleProducerActive(props.id) : undefined} 
         />
       );
