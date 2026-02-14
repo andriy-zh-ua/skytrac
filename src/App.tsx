@@ -72,24 +72,70 @@ const App = () => {
             deletedBrokers.some(broker => broker.id === node.data.brokerId)
           );
           
+          // Find producers connected to these partitions
+          const producersToDeactivate = nds.filter(node => 
+            node.type === 'producer' && 
+            partitionsToRemove.some(partition => 
+              edges.some(edge => edge.source === node.id && edge.target === partition.id)
+            )
+          );
+          
           // Remove the brokers and their associated partitions
           const nodesToRemoveIds = [...nodesToDelete, ...partitionsToRemove].map(n => n.id);
           updatedNodes = nds.filter(node => !nodesToRemoveIds.includes(node.id));
+          
+          // Deactivate producers connected to removed partitions
+          updatedNodes = updatedNodes.map(node => {
+            if (producersToDeactivate.some(producer => producer.id === node.id)) {
+              return { ...node, data: { ...node.data, active: false } };
+            }
+            return node;
+          });
           
           // Also remove edges connected to removed nodes
           setEdges((eds) => eds.filter(edge => 
             !nodesToRemoveIds.includes(edge.source) && !nodesToRemoveIds.includes(edge.target)
           ));
         } else {
-          // Just remove the non-broker nodes normally
-          const nodesToRemoveIds = nodesToDelete.map(n => n.id);
-          updatedNodes = nds.filter(node => !nodesToRemoveIds.includes(node.id));
+          // Check if any partitions are being deleted
+          const deletedPartitions = nodesToDelete.filter(node => node.type === 'partition');
+          
+          if (deletedPartitions.length > 0) {
+            // Find producers connected to deleted partitions
+            const producersToDeactivate = nds.filter(node => 
+              node.type === 'producer' && 
+              deletedPartitions.some(partition => 
+                edges.some(edge => edge.source === node.id && edge.target === partition.id)
+              )
+            );
+            
+            // Deactivate these producers
+            updatedNodes = nds.map(node => {
+              if (producersToDeactivate.some(producer => producer.id === node.id)) {
+                return { ...node, data: { ...node.data, active: false } };
+              }
+              return node;
+            });
+            
+            // Remove the deleted partitions
+            const nodesToRemoveIds = nodesToDelete.map(n => n.id);
+            updatedNodes = updatedNodes.filter(node => !nodesToRemoveIds.includes(node.id));
+            
+            // Remove edges connected to removed nodes
+            setEdges((eds) => eds.filter(edge => 
+              !nodesToRemoveIds.includes(edge.source) && !nodesToRemoveIds.includes(edge.target)
+            ));
+          } else {
+            // Just remove the non-broker, non-partition nodes normally
+            const nodesToRemoveIds = nodesToDelete.map(n => n.id);
+            updatedNodes = nds.filter(node => !nodesToRemoveIds.includes(node.id));
+          }
         }
         
         return updatedNodes;
       });
     },
-    []
+    [edges]
   );
 
   // Add a new node of the specified type
