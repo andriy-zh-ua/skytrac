@@ -40,9 +40,3 @@ code {
   animation: dataFlow 2s linear infinite;
 }
 
-/* Staggered pulse animations */
-.react-flow__edge.pulse1 path { animation-delay: 0s; }
-.react-flow__edge.pulse2 path { animation-delay: 0.5s; }
-.react-flow__edge.pulse3 path { animation-delay: 1s; }
-.react-flow__edge.pulse4 path { animation-delay: 1.5s; }
-

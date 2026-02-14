@@ -21,6 +21,9 @@ import ConsumerNode from './components/ConsumerNode';
 import BrokerNode from './components/BrokerNode';
 import PartitionNode from './components/PartitionNode';
 
+// Configuration
+import { animationConfig } from './config/animation';
+
 // Initial empty canvas
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
@@ -98,14 +101,26 @@ const App = () => {
   // Update edges with animation for selected producers
   const updatedEdges = edges.flatMap(edge => {
     if (selectedProducers.includes(edge.source)) {
-      // Create solid line + multiple animated edges for staggered pulses
-      return [
-        { ...edge, id: `${edge.id}-solid`, className: 'solid-line' },
-        { ...edge, id: `${edge.id}-pulse1`, className: 'animated-flow pulse1' },
-        { ...edge, id: `${edge.id}-pulse2`, className: 'animated-flow pulse2' },
-        { ...edge, id: `${edge.id}-pulse3`, className: 'animated-flow pulse3' },
-        { ...edge, id: `${edge.id}-pulse4`, className: 'animated-flow pulse4' }
+      // Calculate number of pulses needed based on interval and duration
+      const numPulses = Math.ceil(animationConfig.pulseDuration / animationConfig.pulseInterval);
+      const pulseEdges = [
+        { ...edge, id: `${edge.id}-solid`, className: 'solid-line' }
       ];
+      
+      // Create staggered pulse edges
+      for (let i = 0; i < numPulses; i++) {
+        pulseEdges.push({
+          ...edge,
+          id: `${edge.id}-pulse${i}`,
+          className: `animated-flow pulse${i}`,
+          style: { 
+            animationDelay: `${i * animationConfig.pulseInterval}ms`,
+            animationDuration: `${animationConfig.pulseDuration}ms`
+          }
+        });
+      }
+      
+      return pulseEdges;
     }
     return [edge];
   });
