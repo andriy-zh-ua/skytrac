@@ -74,7 +74,16 @@ const App = () => {
 
   // Register custom node types with access to toggleProducerSelection
   const nodeTypes = {
-    producer: (props: any) => <ProducerNode {...props} onClick={() => toggleProducerSelection(props.id)} />,
+    producer: (props: any) => {
+      const hasConnections = edges.some(edge => edge.source === props.id);
+      return (
+        <ProducerNode 
+          {...props} 
+          hasConnections={hasConnections}
+          onClick={() => toggleProducerSelection(props.id)} 
+        />
+      );
+    },
     topic: TopicNode,
     consumer: ConsumerNode,
     broker: BrokerNode,
@@ -136,8 +145,7 @@ const App = () => {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
-          defaultEdgeOptions={{ animated: true }}
-          fitView
+                    fitView
         >
           <MiniMap />
           <Controls />

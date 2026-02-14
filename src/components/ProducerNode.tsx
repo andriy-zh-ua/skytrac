@@ -3,10 +3,11 @@ import { Handle, Position } from '@xyflow/react';
 interface ProducerNodeProps {
   data: { label: string; selected?: boolean };
   onClick?: () => void;
+  hasConnections?: boolean;
 }
 
 // ProducerNode: Aircraft icon representing a Kafka producer
-const ProducerNode = ({ data, onClick }: ProducerNodeProps) => {
+const ProducerNode = ({ data, onClick, hasConnections }: ProducerNodeProps) => {
 
   return (
     <div
@@ -17,9 +18,9 @@ const ProducerNode = ({ data, onClick }: ProducerNodeProps) => {
         padding: '8px',
         minWidth: '80px',
         position: 'relative',
-        cursor: 'pointer',
+        cursor: hasConnections ? 'pointer' : 'not-allowed',
       }}
-      onClick={onClick}
+      onClick={hasConnections ? onClick : undefined}
     >
       {/* Aircraft SVG icon */}
       <svg
