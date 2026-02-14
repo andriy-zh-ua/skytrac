@@ -55,10 +55,41 @@ const App = () => {
 
     const label = `${type.charAt(0).toUpperCase() + type.slice(1)} ${newCount}`;
     
-    // Special positioning for brokers to place them side by side
+    // Special positioning logic
     let position;
+    let nodeData: any = {
+      label, 
+      active: false // Initialize active as false for producers
+    };
+    
     if (type === 'broker') {
       position = { x: 100 + (counters[type] * 300), y: 100 }; // 300px spacing for side-by-side
+    } else if (type === 'partition') {
+      // Find selected broker and position partition inside it
+      const selectedBroker = nodes.find(node => node.type === 'broker' && node.selected);
+      
+      if (selectedBroker) {
+        // Find existing partitions in this broker
+        const existingPartitions = nodes.filter(node => 
+          node.type === 'partition' && 
+          node.data.brokerId === selectedBroker.id // Track which broker this partition belongs to
+        );
+                
+        // Find the lowest existing partition
+        let lowestY = selectedBroker.position.y + 20; // Default top position (close to top edge)
+        if (existingPartitions.length > 0) {
+          lowestY = Math.max(...existingPartitions.map(n => n.position.y));
+        }
+        
+        nodeData.brokerId = selectedBroker.id; // Track which broker this partition belongs to
+        
+        position = { 
+          x: selectedBroker.position.x + 15, // Inside broker with padding offset
+          y: lowestY + 40 // Place below the lowest partition
+        };
+      } else {
+        position = { x: 100 + (counters[type] * 50), y: 100 + (counters[type] * 50) };
+      }
     } else {
       position = { x: 100 + (counters[type] * 50), y: 100 + (counters[type] * 50) };
     }
@@ -67,7 +98,7 @@ const App = () => {
       id: `${type}-${Date.now()}`,
       type,
       position,
-      data: { label, active: false }, // Initialize active as false for producers
+      data: nodeData,
       selected: true, // Use React Flow's built-in selected property
       zIndex: type === 'broker' ? -1 : 1000, // Keep brokers in background
     };
