@@ -69,6 +69,7 @@ const App = () => {
       position,
       data: { label, selected: true },
       className: 'selected',
+      zIndex: type === 'broker' ? -1 : 1000, // Keep brokers in background
     };
 
     setNodes((nds) => [
@@ -89,7 +90,8 @@ const App = () => {
           ? { 
               ...node, 
               data: { ...node.data, selected: true },
-              className: 'selected'
+              className: 'selected',
+              zIndex: node.type === 'broker' ? -1 : 1000, // Keep brokers in background
             }
           : { 
               ...node, 
