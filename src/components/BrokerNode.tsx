@@ -27,7 +27,7 @@ const BrokerNode = ({ data, selected, isCurrentBroker, onClick }: BrokerNodeProp
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-              }}
+      }}
       onClick={onClick}
     >
       {data.label}

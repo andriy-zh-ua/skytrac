@@ -25,7 +25,7 @@ const TopicNode = ({ data, onClick }: TopicNodeProps) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-              }}
+      }}
       onClick={onClick}
     >
       {data.label}

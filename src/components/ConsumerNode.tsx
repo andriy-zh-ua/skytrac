@@ -20,7 +20,7 @@ const ConsumerNode = ({ data, onClick }: ConsumerNodeProps) => {
         textAlign: 'center',
         fontWeight: 'bold',
         cursor: 'pointer',
-              }}
+      }}
       onClick={onClick}
     >
       {data.label}

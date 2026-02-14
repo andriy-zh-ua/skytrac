@@ -20,7 +20,7 @@ const PartitionNode = ({ data, onClick }: PartitionNodeProps) => {
         textAlign: 'center',
         fontWeight: 'bold',
         cursor: 'pointer',
-              }}
+      }}
       onClick={onClick}
     >
       {data.label}
