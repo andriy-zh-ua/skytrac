@@ -20,6 +20,7 @@ import TopicNode from './components/TopicNode';
 import ConsumerNode from './components/ConsumerNode';
 import BrokerNode from './components/BrokerNode';
 import PartitionNode from './components/PartitionNode';
+import CustomAppBar from './components/AppBar';
 
 // Configuration
 import { animationConfig } from './config/animation';
@@ -279,35 +280,11 @@ const App = () => {
   return (
     <Box sx={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Toolbar */}
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Kafka Architecture Builder
-          </Typography>
-          <Button color="inherit" onClick={() => addNode('producer')}>
-            Add Producer
-          </Button>
-          <Button color="inherit" onClick={() => addNode('topic')}>
-            Add Topic
-          </Button>
-          <Button color="inherit" onClick={() => addNode('consumer')}>
-            Add Consumer
-          </Button>
-          <Button color="inherit" onClick={() => addNode('broker')}>
-            Add Broker
-          </Button>
-          <Button 
-            color="inherit" 
-            onClick={() => addNode('partition')}
-            disabled={nodes.filter(node => node.type === 'broker').length === 0}
-          >
-            Add Partition
-          </Button>
-          <Button color="inherit" variant="outlined" sx={{ ml: 2 }} onClick={exportSchema}>
-            Export Schema
-          </Button>
-        </Toolbar>
-      </AppBar>
+      <CustomAppBar 
+        onAddNode={addNode}
+        hasBrokers={nodes.filter(node => node.type === 'broker').length > 0}
+        onExportSchema={exportSchema}
+      />
 
       {/* React Flow Canvas */}
       <Box sx={{ flexGrow: 1 }}>
