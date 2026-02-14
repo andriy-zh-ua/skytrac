@@ -2,10 +2,11 @@ import { Handle, Position } from '@xyflow/react';
 
 interface BrokerNodeProps {
   data: { label: string };
+  onClick?: () => void;
 }
 
 // BrokerNode: Blue box representing a Kafka broker
-const BrokerNode = ({ data }: BrokerNodeProps) => {
+const BrokerNode = ({ data, onClick }: BrokerNodeProps) => {
   return (
     <div
       style={{
@@ -21,7 +22,9 @@ const BrokerNode = ({ data }: BrokerNodeProps) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        cursor: 'pointer',
       }}
+      onClick={onClick}
     >
       {data.label}
       {/* Input handle on the left */}

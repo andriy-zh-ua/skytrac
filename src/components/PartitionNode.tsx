@@ -2,10 +2,11 @@ import { Handle, Position } from '@xyflow/react';
 
 interface PartitionNodeProps {
   data: { label: string };
+  onClick?: () => void;
 }
 
 // PartitionNode: Purple box representing a Kafka partition
-const PartitionNode = ({ data }: PartitionNodeProps) => {
+const PartitionNode = ({ data, onClick }: PartitionNodeProps) => {
   return (
     <div
       style={{
@@ -17,7 +18,9 @@ const PartitionNode = ({ data }: PartitionNodeProps) => {
         minWidth: '120px',
         textAlign: 'center',
         fontWeight: 'bold',
+        cursor: 'pointer',
       }}
+      onClick={onClick}
     >
       {data.label}
       {/* Input handle on the left */}

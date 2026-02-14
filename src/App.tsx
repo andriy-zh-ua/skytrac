@@ -67,19 +67,35 @@ const App = () => {
       id: `${type}-${Date.now()}`,
       type,
       position,
-      data: { label, selected: false },
+      data: { label, selected: true },
+      className: 'selected',
     };
 
-    setNodes((nds) => [...nds, newNode]);
+    setNodes((nds) => [
+      ...nds.map(node => ({ 
+        ...node, 
+        data: { ...node.data, selected: false },
+        className: undefined
+      })),
+      newNode
+    ]);
   };
 
-  // Toggle producer selection state
-  const toggleProducerSelection = (nodeId: string) => {
+  // Simple selection function - select one node, deselect others
+  const selectNode = (nodeId: string) => {
     setNodes((nds) =>
       nds.map((node) =>
-        node.id === nodeId && node.type === 'producer'
-          ? { ...node, data: { ...node.data, selected: !node.data.selected } }
-          : node
+        node.id === nodeId
+          ? { 
+              ...node, 
+              data: { ...node.data, selected: true },
+              className: 'selected'
+            }
+          : { 
+              ...node, 
+              data: { ...node.data, selected: false },
+              className: undefined
+            }
       )
     );
   };
@@ -89,7 +105,7 @@ const App = () => {
     .filter(node => node.type === 'producer' && node.data.selected)
     .map(node => node.id);
 
-  // Register custom node types with access to toggleProducerSelection
+  // Register custom node types with click handlers
   const nodeTypes = {
     producer: (props: any) => {
       const hasConnections = edges.some(edge => edge.source === props.id);
@@ -97,14 +113,14 @@ const App = () => {
         <ProducerNode 
           {...props} 
           hasConnections={hasConnections}
-          onClick={() => toggleProducerSelection(props.id)} 
+          onClick={() => hasConnections ? selectNode(props.id) : undefined} 
         />
       );
     },
-    topic: TopicNode,
-    consumer: ConsumerNode,
-    broker: BrokerNode,
-    partition: PartitionNode,
+    topic: (props: any) => <TopicNode {...props} onClick={() => selectNode(props.id)} />,
+    consumer: (props: any) => <ConsumerNode {...props} onClick={() => selectNode(props.id)} />,
+    broker: (props: any) => <BrokerNode {...props} onClick={() => selectNode(props.id)} />,
+    partition: (props: any) => <PartitionNode {...props} onClick={() => selectNode(props.id)} />,
   };
 
   // Update edges with animation for selected producers

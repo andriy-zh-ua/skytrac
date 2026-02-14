@@ -2,10 +2,11 @@ import { Handle, Position } from '@xyflow/react';
 
 interface TopicNodeProps {
   data: { label: string };
+  onClick?: () => void;
 }
 
 // TopicNode: Green box representing a Kafka topic
-const TopicNode = ({ data }: TopicNodeProps) => {
+const TopicNode = ({ data, onClick }: TopicNodeProps) => {
   return (
     <div
       style={{
@@ -17,7 +18,9 @@ const TopicNode = ({ data }: TopicNodeProps) => {
         minWidth: '120px',
         textAlign: 'center',
         fontWeight: 'bold',
+        cursor: 'pointer',
       }}
+      onClick={onClick}
     >
       {data.label}
       {/* Input handle on the left - receives from Producers */}
