@@ -29,10 +29,6 @@ const TopicNode = ({ data, onClick }: TopicNodeProps) => {
       onClick={onClick}
     >
       {data.label}
-      {/* Input handle on the left - receives from Producers */}
-      <Handle type="target" position={Position.Left} />
-      {/* Output handle on the right - connects to Consumers */}
-      <Handle type="source" position={Position.Right} />
     </div>
   );
 };

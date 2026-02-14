@@ -31,10 +31,6 @@ const BrokerNode = ({ data, selected, isCurrentBroker, onClick }: BrokerNodeProp
       onClick={onClick}
     >
       {data.label}
-      {/* Input handle on the left */}
-      <Handle type="target" position={Position.Left} />
-      {/* Output handle on the right */}
-      <Handle type="source" position={Position.Right} />
     </div>
   );
 };
