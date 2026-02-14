@@ -54,10 +54,19 @@ const App = () => {
     setCounters({ ...counters, [type]: newCount });
 
     const label = `${type.charAt(0).toUpperCase() + type.slice(1)} ${newCount}`;
+    
+    // Special positioning for brokers to place them side by side
+    let position;
+    if (type === 'broker') {
+      position = { x: 100 + (counters[type] * 300), y: 100 }; // 300px spacing for side-by-side
+    } else {
+      position = { x: 100 + (counters[type] * 50), y: 100 + (counters[type] * 50) };
+    }
+    
     const newNode: Node = {
       id: `${type}-${Date.now()}`,
       type,
-      position: { x: 100 + (counters[type] * 50), y: 100 + (counters[type] * 50) },
+      position,
       data: { label, selected: false },
     };
 
