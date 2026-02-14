@@ -30,16 +30,23 @@ const initialEdges: Edge[] = [];
 
 const App = () => {
   // React Flow state hooks
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-  // Counters for unique node labels
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes as any);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges as any);
   const [counters, setCounters] = useState({
     producer: 0,
     topic: 0,
     consumer: 0,
     broker: 0,
     partition: 0,
+  });
+  
+  // Track current selected object for each category
+  const [currentObjects, setCurrentObjects] = useState<Record<string, string | null>>({
+    producer: null,
+    topic: null,
+    consumer: null,
+    broker: null,
+    partition: null,
   });
 
   // Handle new connections between nodes
@@ -65,8 +72,11 @@ const App = () => {
     if (type === 'broker') {
       position = { x: 100 + (counters[type] * 300), y: 100 }; // 300px spacing for side-by-side
     } else if (type === 'partition') {
-      // Find selected broker and position partition inside it
-      const selectedBroker = nodes.find(node => node.type === 'broker' && node.selected);
+      // Get current broker from currentObjects state
+      const currentBrokerId = currentObjects.broker;
+      console.log('Debug - currentBrokerId:', currentBrokerId);
+      const selectedBroker = currentBrokerId ? nodes.find(n => n.id === currentBrokerId) : null;
+      console.log('Debug - selectedBroker:', selectedBroker);
       
       if (selectedBroker) {
         // Find existing partitions in this broker
@@ -103,21 +113,39 @@ const App = () => {
       zIndex: type === 'broker' ? -1 : 1000, // Keep brokers in background
     };
 
-    setNodes((nds) => [
-      ...nds.map(node => ({ ...node, selected: false })),
-      newNode
-    ]);
+    setNodes((nds) => {
+      const updatedNodes = [
+        ...nds.map(node => ({ ...node, selected: false })),
+        newNode
+      ];
+      
+      // Update currentObjects for the new node type
+      if (type === 'broker' && newNode.id) {
+        setCurrentObjects(prev => ({ ...prev, broker: newNode.id }));
+      }
+      
+      return updatedNodes;
+    });
   };
 
-  // Simple selection function - select one node, deselect others
+  // Simple selection function - select one node, deselect others, and track current objects
   const selectNode = (nodeId: string) => {
-    setNodes((nds) =>
-      nds.map((node) =>
+    setNodes((nds) => {
+      const clickedNode = nds.find(n => n.id === nodeId);
+      if (!clickedNode) return nds;
+      
+      // Update current objects for this category
+      setCurrentObjects(prev => ({
+        ...prev,
+        [clickedNode.type as string]: nodeId
+      }));
+      
+      return nds.map((node) =>
         node.id === nodeId
           ? { ...node, selected: true }
           : { ...node, selected: false }
-      )
-    );
+      );
+    });
   };
 
   // Toggle producer active state (green/transmitting) - only if connected to partition
@@ -142,20 +170,9 @@ const App = () => {
             }
           : node
       );
-      console.log('Toggle producer active:', updatedNodes.filter(n => n.type === 'producer').map(n => ({ id: n.id, active: n.data.active })));
       return updatedNodes;
     });
   };
-
-  // Get selected producer IDs
-  const selectedProducers = nodes
-    .filter(node => node.type === 'producer' && node.selected)
-    .map(node => node.id);
-
-  // Get active producer IDs (green, transmitting)
-  const activeProducers = nodes
-    .filter(node => node.type === 'producer' && node.data.active)
-    .map(node => node.id);
 
   // Register custom node types with click handlers
   const nodeTypes = {
@@ -178,7 +195,7 @@ const App = () => {
 
   // Update edges with animation for active producers
   const updatedEdges = edges.flatMap(edge => {
-    if (activeProducers.includes(edge.source)) {
+    if (nodes.filter(node => node.type === 'producer' && node.data.active).map(node => node.id).includes(edge.source)) {
       // Calculate number of pulses needed based on interval and duration
       const numPulses = Math.ceil(animationConfig.pulseDuration / animationConfig.pulseInterval);
       const pulseEdges = [
