@@ -125,6 +125,7 @@ const App = () => {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          defaultEdgeOptions={{ style: { strokeDasharray: '5,5' } }}
           fitView
         >
           <MiniMap />
