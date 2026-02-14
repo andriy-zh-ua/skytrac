@@ -105,6 +105,28 @@ const App = () => {
     [setEdges]
   );
 
+  // Handle connection start - select the producer when starting to connect
+  const onConnectStart = useCallback(
+    (event: any, params: any) => {
+      if (params.nodeId && params.handleType === 'source') {
+        const node = nodes.find(n => n.id === params.nodeId);
+        if (node?.type === 'producer') {
+          // Select the producer when starting to connect
+          setNodes((nds) => 
+            nds.map((n) => ({
+              ...n,
+              selected: n.id === params.nodeId
+            }))
+          );
+          
+          // Update current objects
+          setCurrentObjects(prev => ({ ...prev, producer: params.nodeId }));
+        }
+      }
+    },
+    [setNodes, nodes, setCurrentObjects]
+  );
+
   
   // Handle node deletion - remove associated partitions when broker is deleted
   const onNodesDelete = useCallback(
@@ -402,6 +424,7 @@ const App = () => {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onConnectStart={onConnectStart}
           onNodesDelete={onNodesDelete}
           nodeTypes={nodeTypes}
           fitView
