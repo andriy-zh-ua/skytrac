@@ -281,12 +281,17 @@ const App = () => {
       position,
       data: nodeData,
       selected: true, // Use React Flow's built-in selected property
-      zIndex: type === 'broker' ? -1 : 1000, // Keep brokers in background
+      zIndex: type === 'broker' ? -1 : type === 'partition' ? 3000 : 1000, // Partitions highest (3000), brokers lowest (-1), others medium (1000)
     };
 
     setNodes((nds) => {
       const updatedNodes = [
-        ...nds.map(node => ({ ...node, selected: false })),
+        ...nds.map(node => ({ 
+          ...node, 
+          selected: false,
+          // Ensure all nodes have correct z-index
+          zIndex: node.type === 'broker' ? -1 : node.type === 'partition' ? 3000 : 1000
+        })),
         newNode
       ];
       
