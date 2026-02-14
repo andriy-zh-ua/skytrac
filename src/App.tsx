@@ -57,7 +57,7 @@ const App = () => {
     const newNode: Node = {
       id: `${type}-${Date.now()}`,
       type,
-      position: { x: Math.random() * 400 + 50, y: Math.random() * 300 + 50 },
+      position: { x: 100 + (counters[type] * 50), y: 100 + (counters[type] * 50) },
       data: { label, selected: false },
     };
 
