@@ -3,10 +3,11 @@ import { Handle, Position } from '@xyflow/react';
 interface TopicNodeProps {
   data: { label: string };
   onClick?: () => void;
+  onDuplicate?: () => void;
 }
 
 // TopicNode: Green box representing a Kafka topic
-const TopicNode = ({ data, onClick }: TopicNodeProps) => {
+const TopicNode = ({ data, onClick, onDuplicate }: TopicNodeProps) => {
   return (
     <div
       data-type="topic"
@@ -28,7 +29,37 @@ const TopicNode = ({ data, onClick }: TopicNodeProps) => {
       }}
       onClick={onClick}
     >
-      {data.label}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+        <span>{data.label}</span>
+        {/* Duplicate button */}
+        {onDuplicate && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDuplicate();
+            }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
+              borderRadius: '50%',
+              width: '20px',
+              height: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              color: 'white',
+              padding: '0',
+              marginLeft: '8px'
+            }}
+            title="Duplicate topic"
+          >
+            +
+          </button>
+        )}
+      </div>
     </div>
   );
 };
