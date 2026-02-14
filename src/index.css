@@ -20,7 +20,7 @@ code {
   }
   100% {
     stroke-dasharray: 5 999;
-    stroke-dashoffset: -1000;
+    stroke-dashoffset: -1004;
   }
 }
 
@@ -37,6 +37,12 @@ code {
   stroke-width: 3;
   stroke-dasharray: 5 999;
   stroke-dashoffset: 0;
-  animation: dataFlow 1s linear infinite;
+  animation: dataFlow 2s linear infinite;
 }
+
+/* Staggered pulse animations */
+.react-flow__edge.pulse1 path { animation-delay: 0s; }
+.react-flow__edge.pulse2 path { animation-delay: 0.5s; }
+.react-flow__edge.pulse3 path { animation-delay: 1s; }
+.react-flow__edge.pulse4 path { animation-delay: 1.5s; }
 
