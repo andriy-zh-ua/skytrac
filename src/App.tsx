@@ -72,6 +72,11 @@ const App = () => {
     );
   };
 
+  // Get selected producer IDs
+  const selectedProducers = nodes
+    .filter(node => node.type === 'producer' && node.data.selected)
+    .map(node => node.id);
+
   // Register custom node types with access to toggleProducerSelection
   const nodeTypes = {
     producer: (props: any) => {
@@ -89,6 +94,18 @@ const App = () => {
     broker: BrokerNode,
     partition: PartitionNode,
   };
+
+  // Update edges with animation for selected producers
+  const updatedEdges = edges.flatMap(edge => {
+    if (selectedProducers.includes(edge.source)) {
+      // Create two edges: one solid, one animated
+      return [
+        { ...edge, id: `${edge.id}-solid`, className: 'solid-line' },
+        { ...edge, id: `${edge.id}-animated`, className: 'animated-flow' }
+      ];
+    }
+    return [edge];
+  });
 
   // Export schema as JSON to console
   const exportSchema = () => {
@@ -140,7 +157,7 @@ const App = () => {
       <Box sx={{ flexGrow: 1 }}>
         <ReactFlow
           nodes={nodes}
-          edges={edges}
+          edges={updatedEdges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
