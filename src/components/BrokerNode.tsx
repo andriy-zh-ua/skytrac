@@ -14,9 +14,13 @@ const BrokerNode = ({ data }: BrokerNodeProps) => {
         background: '#42a5f5',
         color: 'white',
         border: '2px solid #1976d2',
-        minWidth: '120px',
+        width: '150px',
+        height: '80vh',
         textAlign: 'center',
         fontWeight: 'bold',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       {data.label}
