@@ -135,7 +135,7 @@ const App = () => {
         
         position = { 
           x: selectedBroker.position.x + 15, // Inside broker with padding offset
-          y: lowestY + 40 // Place below the lowest partition
+          y: lowestY + 50 // Place below the lowest partition with increased spacing
         };
       } else {
         position = { x: 100 + (counters[type] * 50), y: 100 + (counters[type] * 50) };
