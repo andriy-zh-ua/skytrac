@@ -49,10 +49,10 @@ const App = () => {
         );
         
         if (brokerChanges.length > 0) {
-          // Move associated partitions with their brokers
+          // Move associated partitions and topics with their brokers
           updatedNodes = updatedNodes.map((node: Node) => {
-            if (node.type === 'partition') {
-              // Find the broker this partition belongs to
+            if (node.type === 'partition' || node.type === 'topic') {
+              // Find the broker this node belongs to
               const broker = nds.find((n: Node) => n.id === node.data.brokerId && n.type === 'broker');
               if (broker) {
                 // Find the corresponding updated broker
@@ -62,7 +62,7 @@ const App = () => {
                   const deltaX = updatedBroker.position.x - broker.position.x;
                   const deltaY = updatedBroker.position.y - broker.position.y;
                   
-                  // Move the partition by the same amount, maintaining centered position
+                  // Move the node by the same amount, maintaining centered position
                   return {
                     ...node,
                     position: {
@@ -238,6 +238,43 @@ const App = () => {
       }
       
       position = { x: xPosition, y: 100 };
+    } else if (type === 'topic') {
+      // Check if there are any brokers on the canvas
+      const brokers = nodes.filter(node => node.type === 'broker');
+      if (brokers.length === 0) {
+        return;
+      }
+      
+      // Get current broker from currentObjects state
+      const currentBrokerId = currentObjects.broker;
+      const selectedBroker = currentBrokerId ? nodes.find(n => n.id === currentBrokerId) : null;
+      
+      if (selectedBroker) {
+        // Find existing topics in this broker
+        const existingTopics = nodes.filter(node => 
+          node.type === 'topic' && 
+          node.data.brokerId === selectedBroker.id // Track which broker this topic belongs to
+        );
+                
+        // Find the lowest existing topic
+        let lowestY = selectedBroker.position.y + 20; // Default top position (close to top edge)
+        if (existingTopics.length > 0) {
+          // Find the bottom of the lowest topic (position.y + topic height + spacing)
+          // Topic height: 50px (minHeight) + 24px (padding top/bottom) = 74px total
+          const bottomOfLowestTopic = Math.max(...existingTopics.map(n => n.position.y + 74)); // 74px is total topic height
+          lowestY = bottomOfLowestTopic;
+        }
+        
+        nodeData.brokerId = selectedBroker.id; // Track which broker this topic belongs to
+        
+        // Center topic inside broker (200px broker - 150px topic width) / 2 = 25px
+        position = { 
+          x: selectedBroker.position.x + 25, // Center horizontally inside 200px broker
+          y: lowestY + 15 // Add 15px spacing between topics
+        };
+      } else {
+        position = { x: 100 + (counters[type] * 50), y: 100 + (counters[type] * 50) };
+      }
     } else if (type === 'partition') {
       // Check if there are any brokers on the canvas
       const brokers = nodes.filter(node => node.type === 'broker');

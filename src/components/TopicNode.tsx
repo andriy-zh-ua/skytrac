@@ -16,7 +16,7 @@ const TopicNode = ({ data, onClick }: TopicNodeProps) => {
         background: '#66bb6a',
         color: 'white',
         border: '2px solid #388e3c',
-        minWidth: '170px',
+        minWidth: '150px',
         minHeight: '50px',
         fontSize: '14px',
         textAlign: 'center',
