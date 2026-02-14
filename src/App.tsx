@@ -55,6 +55,42 @@ const App = () => {
     [setEdges]
   );
 
+  // Handle node deletion - remove associated partitions when broker is deleted
+  const onNodesDelete = useCallback(
+    (nodesToDelete: Node[]) => {
+      setNodes((nds) => {
+        let updatedNodes = nds;
+        
+        // Check if any brokers are being deleted
+        const deletedBrokers = nodesToDelete.filter(node => node.type === 'broker');
+        
+        if (deletedBrokers.length > 0) {
+          // Find all partitions associated with deleted brokers
+          const partitionsToRemove = nds.filter(node => 
+            node.type === 'partition' && 
+            deletedBrokers.some(broker => broker.id === node.data.brokerId)
+          );
+          
+          // Remove the brokers and their associated partitions
+          const nodesToRemoveIds = [...nodesToDelete, ...partitionsToRemove].map(n => n.id);
+          updatedNodes = nds.filter(node => !nodesToRemoveIds.includes(node.id));
+          
+          // Also remove edges connected to removed nodes
+          setEdges((eds) => eds.filter(edge => 
+            !nodesToRemoveIds.includes(edge.source) && !nodesToRemoveIds.includes(edge.target)
+          ));
+        } else {
+          // Just remove the non-broker nodes normally
+          const nodesToRemoveIds = nodesToDelete.map(n => n.id);
+          updatedNodes = nds.filter(node => !nodesToRemoveIds.includes(node.id));
+        }
+        
+        return updatedNodes;
+      });
+    },
+    []
+  );
+
   // Add a new node of the specified type
   const addNode = (type: 'producer' | 'topic' | 'consumer' | 'broker' | 'partition') => {
     const newCount = counters[type] + 1;
@@ -281,8 +317,9 @@ const App = () => {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onNodesDelete={onNodesDelete}
           nodeTypes={nodeTypes}
-                    fitView
+          fitView
         >
           <MiniMap />
           <Controls />
