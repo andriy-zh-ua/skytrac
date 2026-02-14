@@ -11,15 +11,20 @@ const TopicNode = ({ data, onClick }: TopicNodeProps) => {
     <div
       data-type="topic"
       style={{
-        padding: '10px 20px',
+        padding: '12px 24px',
         borderRadius: '8px',
         background: '#66bb6a',
         color: 'white',
         border: '2px solid #388e3c',
-        minWidth: '120px',
+        minWidth: '170px',
+        minHeight: '50px',
+        fontSize: '14px',
         textAlign: 'center',
         fontWeight: 'bold',
         cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
               }}
       onClick={onClick}
     >
