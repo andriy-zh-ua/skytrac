@@ -1,0 +1,10 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.32"
+    }
+  }
+
+  required_version = ">= 1.0" # Minimum Terraform version required
+}
