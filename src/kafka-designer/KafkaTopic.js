@@ -5,7 +5,14 @@ export class KafkaTopic {
     this.config = config;
     this.partitions = new Map();
     this.createdAt = new Date();
+    this.validateTopic();
     this.initializePartitions();
+  }
+
+  validateTopic() {
+    if (!this.config.partitions || this.config.partitions < 1) {
+      throw new Error('KafkaTopic must contain at least one KafkaPartition to be valid');
+    }
   }
 
   initializePartitions() {
@@ -54,7 +61,12 @@ export class KafkaTopic {
 
   // Topic operations
   isHealthy() {
-    return this.getAllPartitions().every(partition => partition.isHealthy());
+    const partitions = this.getAllPartitions();
+    // If no partitions, topic is not healthy
+    if (partitions.length === 0) {
+      return false;
+    }
+    return partitions.every(partition => partition.isHealthy());
   }
 
   getTotalMessages() {
