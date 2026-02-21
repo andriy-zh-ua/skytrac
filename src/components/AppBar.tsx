@@ -5,9 +5,17 @@ interface AppBarProps {
   onAddNode: (type: 'producer' | 'topic' | 'consumer' | 'broker' | 'partition') => void;
   hasBrokers: boolean;
   onExportSchema: () => void;
+  kafkaStats?: {
+    brokerCount: number;
+    topicCount: number;
+    partitionCount: number;
+    producerCount: number;
+    consumerCount: number;
+    healthStatus: boolean;
+  };
 }
 
-const CustomAppBar: React.FC<AppBarProps> = ({ onAddNode, hasBrokers, onExportSchema }) => {
+const CustomAppBar: React.FC<AppBarProps> = ({ onAddNode, hasBrokers, onExportSchema, kafkaStats }) => {
   return (
     <AppBar position="static">
       <Toolbar>
@@ -40,6 +48,30 @@ const CustomAppBar: React.FC<AppBarProps> = ({ onAddNode, hasBrokers, onExportSc
         <Button color="inherit" variant="outlined" sx={{ ml: 2 }} onClick={onExportSchema}>
           Export Schema
         </Button>
+        
+        {/* Kafka Stats Display */}
+        {kafkaStats && (
+          <Box sx={{ ml: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" sx={{ color: 'white' }}>
+              🏢 {kafkaStats.brokerCount}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'white' }}>
+              📋 {kafkaStats.topicCount}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'white' }}>
+              📊 {kafkaStats.partitionCount}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'white' }}>
+              📤 {kafkaStats.producerCount}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'white' }}>
+              📥 {kafkaStats.consumerCount}
+            </Typography>
+            <Typography variant="body2" sx={{ color: kafkaStats.healthStatus ? '#4caf50' : '#f44336' }}>
+              {kafkaStats.healthStatus ? '✅' : '❌'}
+            </Typography>
+          </Box>
+        )}
       </Toolbar>
     </AppBar>
   );

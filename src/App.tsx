@@ -16,6 +16,9 @@ import {
 import '@xyflow/react/dist/style.css';
 import { AppBar, Toolbar, Button, Typography, Box } from '@mui/material';
 
+// Import Kafka Canvas Integration
+import { KafkaCanvasIntegration } from './kafka-designer/CanvasIntegration.js';
+
 // Custom node components
 import ProducerNode from './components/ProducerNode';
 import TopicNode from './components/TopicNode';
@@ -32,6 +35,10 @@ const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
 const App = () => {
+  // Kafka Canvas Integration
+  const [kafkaIntegration] = useState(() => new KafkaCanvasIntegration());
+  const [kafkaStats, setKafkaStats] = useState(kafkaIntegration.cluster.getClusterStats());
+
   // React Flow state hooks
   const [nodes, setNodes, onNodesChangeOriginal] = useNodesState(initialNodes as any);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges as any);
@@ -216,6 +223,43 @@ const App = () => {
     setCounters({ ...counters, [type]: newCount });
 
     const label = `${type.charAt(0).toUpperCase() + type.slice(1)} ${newCount}`;
+
+    // Use Kafka Integration for business logic
+    let kafkaResult = null;
+    if (type === 'broker') {
+      kafkaResult = kafkaIntegration.handleAddBroker({ x: 100, y: 100 });
+      setKafkaStats(kafkaIntegration.cluster.getClusterStats());
+
+    } else if (type === 'topic') {
+      kafkaResult = kafkaIntegration.handleAddTopic({ x: 100, y: 100 }, {
+        name: label,
+        partitions: 3,
+        replicationFactor: 1
+      });
+      setKafkaStats(kafkaIntegration.cluster.getClusterStats());
+
+    } else if (type === 'producer') {
+      kafkaResult = kafkaIntegration.handleAddProducer({ x: 100, y: 100 }, {
+        id: `producer-${Date.now()}`,
+        clientId: `producer-client-${Date.now()}`
+      });
+      setKafkaStats(kafkaIntegration.cluster.getClusterStats());
+
+    } else if (type === 'consumer') {
+      kafkaResult = kafkaIntegration.handleAddConsumer({ x: 100, y: 100 }, {
+        id: `consumer-${Date.now()}`,
+        groupId: `group-${Date.now()}`,
+        clientId: `consumer-client-${Date.now()}`
+      });
+      setKafkaStats(kafkaIntegration.cluster.getClusterStats());
+
+    } else if (type === 'partition') {
+      kafkaResult = kafkaIntegration.handleAddPartition({ x: 100, y: 100 }, {
+        id: `partition-${Date.now()}`,
+        topic: 'default-topic'
+      });
+      setKafkaStats(kafkaIntegration.cluster.getClusterStats());
+    }
     
     // Special positioning logic
     let position;
@@ -487,6 +531,7 @@ const App = () => {
         onAddNode={addNode}
         hasBrokers={nodes.filter(node => node.type === 'broker').length > 0}
         onExportSchema={exportSchema}
+        kafkaStats={kafkaStats}
       />
 
       {/* React Flow Canvas */}

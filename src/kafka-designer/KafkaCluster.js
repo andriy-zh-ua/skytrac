@@ -1,7 +1,7 @@
-import KafkaBroker from './KafkaBroker.js';
-import KafkaTopic from './KafkaTopic.js';
-import KafkaProducer from './KafkaProducer.js';
-import KafkaConsumer from './KafkaConsumer.js';
+import { KafkaBroker } from './KafkaBroker.js';
+import { KafkaTopic } from './KafkaTopic.js';
+import { KafkaProducer } from './KafkaProducer.js';
+import { KafkaConsumer } from './KafkaConsumer.js';
 
 export class KafkaCluster {
   constructor(config) {
@@ -136,20 +136,19 @@ export class KafkaCluster {
 
   // Validation
   validateCluster() {
-    if (this.config.brokers.length === 0) {
-      throw new Error('Cluster must have at least one broker');
-    }
+    // Only validate if we have brokers - allow empty clusters during initialization
+    if (this.config.brokers.length > 0) {
+      const hasController = this.config.brokers.some(b => b.isController);
+      if (!hasController) {
+        throw new Error('Cluster must have at least one controller broker');
+      }
 
-    const hasController = this.config.brokers.some(b => b.isController);
-    if (!hasController) {
-      throw new Error('Cluster must have at least one controller broker');
-    }
-
-    // Check for duplicate broker IDs
-    const brokerIds = this.config.brokers.map(b => b.id);
-    const uniqueIds = new Set(brokerIds);
-    if (brokerIds.length !== uniqueIds.size) {
-      throw new Error('Duplicate broker IDs found');
+      // Check for duplicate broker IDs
+      const brokerIds = this.config.brokers.map(b => b.id);
+      const uniqueIds = new Set(brokerIds);
+      if (brokerIds.length !== uniqueIds.size) {
+        throw new Error('Duplicate broker IDs found');
+      }
     }
 
     // Check for duplicate topic names

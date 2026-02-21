@@ -1,4 +1,4 @@
-import KafkaPartition from './KafkaPartition.js';
+import { KafkaPartition } from './KafkaPartition.js';
 
 export class KafkaTopic {
   constructor(config) {
