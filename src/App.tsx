@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   Node,
@@ -12,6 +12,7 @@ import {
   useNodesState,
   useEdgesState,
   type OnConnect,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Box } from '@mui/material';
@@ -384,6 +385,30 @@ const App = () => {
       return updatedNodes;
     });
   };
+
+  // Delete selected nodes
+  const deleteSelectedNodes = useCallback(() => {
+    const selectedNodes = nodes.filter(node => node.selected);
+    if (selectedNodes.length > 0) {
+      onNodesDelete(selectedNodes);
+    }
+  }, [nodes, onNodesDelete]);
+
+  // Handle keyboard events
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      event.preventDefault();
+      deleteSelectedNodes();
+    }
+  }, [deleteSelectedNodes]);
+
+  // Add keyboard event listener
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
   // Simple selection function - select one node, deselect others, and track current objects
   const selectNode = (nodeId: string) => {
