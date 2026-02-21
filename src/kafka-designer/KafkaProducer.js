@@ -1,4 +1,4 @@
-class KafkaProducer {
+export class KafkaProducer {
   constructor(config) {
     this.config = config;
     this.messagesSent = 0;
@@ -101,5 +101,3 @@ class KafkaProducer {
     return producer;
   }
 }
-
-export default KafkaProducer;

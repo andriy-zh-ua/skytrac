@@ -1,4 +1,4 @@
-class KafkaPartition {
+export class KafkaPartition {
   constructor(config) {
     this.config = config;
     this.offset = 0;
@@ -88,5 +88,3 @@ class KafkaPartition {
     return partition;
   }
 }
-
-export default KafkaPartition;

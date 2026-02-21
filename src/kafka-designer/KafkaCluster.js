@@ -3,7 +3,7 @@ import KafkaTopic from './KafkaTopic.js';
 import KafkaProducer from './KafkaProducer.js';
 import KafkaConsumer from './KafkaConsumer.js';
 
-class KafkaCluster {
+export class KafkaCluster {
   constructor(config) {
     this.config = config;
     this.createdAt = new Date();
@@ -286,5 +286,3 @@ class KafkaCluster {
     return cluster;
   }
 }
-
-export default KafkaCluster;

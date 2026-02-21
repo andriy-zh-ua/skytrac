@@ -1,6 +1,6 @@
 import KafkaPartition from './KafkaPartition.js';
 
-class KafkaTopic {
+export class KafkaTopic {
   constructor(config) {
     this.config = config;
     this.partitions = new Map();
@@ -83,5 +83,3 @@ class KafkaTopic {
     return topic;
   }
 }
-
-export default KafkaTopic;

@@ -1,4 +1,4 @@
-class KafkaConsumer {
+export class KafkaConsumer {
   constructor(config) {
     this.config = config;
     this.assignments = new Map();
@@ -176,5 +176,3 @@ class KafkaConsumer {
     return consumer;
   }
 }
-
-export default KafkaConsumer;

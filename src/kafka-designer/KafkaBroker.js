@@ -1,4 +1,4 @@
-class KafkaBroker {
+export class KafkaBroker {
   constructor(config) {
     this.config = config;
     this.topics = new Set();
@@ -48,5 +48,3 @@ class KafkaBroker {
     return broker;
   }
 }
-
-export default KafkaBroker;
