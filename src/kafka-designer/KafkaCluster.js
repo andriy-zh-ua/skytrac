@@ -16,6 +16,7 @@ export class KafkaCluster {
   get topics() { return [...this.config.topics]; }
   get producers() { return [...this.config.producers]; }
   get consumers() { return [...this.config.consumers]; }
+  get standalonePartitions() { return [...this.config.standalonePartitions]; }
   get created() { return this.createdAt; }
 
   // Broker management
@@ -110,16 +111,37 @@ export class KafkaCluster {
     return this.config.consumers.filter(c => c.groupId === groupId);
   }
 
+  // Standalone partition management
+  addStandalonePartition(partition) {
+    this.config.standalonePartitions.push(partition);
+  }
+
+  removeStandalonePartition(partitionId) {
+    this.config.standalonePartitions = this.config.standalonePartitions.filter(p => p.id !== partitionId);
+  }
+
+  getStandalonePartition(partitionId) {
+    return this.config.standalonePartitions.find(p => p.id === partitionId);
+  }
+
   // Cluster health and statistics
   isHealthy() {
     return this.config.brokers.every(b => b.healthStatus) &&
            this.config.topics.every(t => t.isHealthy());
   }
 
-  getClusterStats() {
-    const partitionCount = this.config.topics.reduce((total, topic) => 
+  getTotalPartitionCount() {
+    const topicPartitionCount = this.config.topics.reduce((total, topic) => 
       total + topic.partitionCount, 0);
     
+    const standalonePartitionCount = this.config.standalonePartitions.length;
+    
+    return topicPartitionCount + standalonePartitionCount;
+  }
+
+  getClusterStats() {
+    const partitionCount = this.getTotalPartitionCount();
+     
     const totalMessages = this.config.topics.reduce((total, topic) => 
       total + topic.getTotalMessages(), 0);
 

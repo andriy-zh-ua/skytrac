@@ -14,7 +14,7 @@ import {
   type OnConnect,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { AppBar, Toolbar, Button, Typography, Box } from '@mui/material';
+import { Box } from '@mui/material';
 
 // Import Kafka Canvas Integration
 import { KafkaCanvasIntegration } from './kafka-designer/CanvasIntegration.js';
@@ -509,19 +509,60 @@ const App = () => {
 
   // Export schema as JSON to console
   const exportSchema = () => {
-    const schema = {
-      nodes: nodes.map((n) => ({
-        id: n.id,
-        type: n.type,
-        label: n.data.label,
-      })),
-      edges: edges.map((e) => ({
-        source: e.source,
-        target: e.target,
-      })),
-    };
-    console.log('Kafka Schema:', JSON.stringify(schema, null, 2));
-    alert('Schema exported to console! Press F12 to view.');
+    try {
+      // Validate cluster has at least one broker
+      if (kafkaIntegration.cluster.brokers.length === 0) {
+        throw new Error('Cluster must have at least one broker to export schema');
+      }
+
+
+      // Topics exist, validate each topic has at least one partition
+      kafkaIntegration.cluster.topics.forEach(topic => {
+        topic.validateTopic();
+      });
+
+      // No topics exist, check if we have standalone partitions
+      const standalonePartitionCount = kafkaIntegration.cluster.standalonePartitions.length;
+      if (standalonePartitionCount === 0) {
+        throw new Error('Cluster must have at least one partition (from topics or standalone) to export schema');
+      }
+
+      // Validate all producers have valid configuration
+      // kafkaIntegration.cluster.producers.forEach(producer => {
+      //   if (!producer.config.bootstrapServers || producer.config.bootstrapServers.length === 0) {
+      //     throw new Error(`Producer ${producer.id} must have at least one bootstrap server`);
+      //   }
+      // });
+
+      // Validate all consumers have valid configuration
+      // kafkaIntegration.cluster.consumers.forEach(consumer => {
+      //   if (!consumer.config.bootstrapServers || consumer.config.bootstrapServers.length === 0) {
+      //     throw new Error(`Consumer ${consumer.id} must have at least one bootstrap server`);
+      //   }
+      //   if (!consumer.config.groupId) {
+      //     throw new Error(`Consumer ${consumer.id} must have a group ID`);
+      //   }
+      // });
+
+      const schema = {
+        nodes: nodes.map((n) => ({
+          id: n.id,
+          type: n.type,
+          label: n.data.label,
+        })),
+        edges: edges.map((e) => ({
+          source: e.source,
+          target: e.target,
+        })),
+        cluster: kafkaIntegration.cluster.toJSON()
+      };
+      console.log('Kafka Schema:', JSON.stringify(schema, null, 2));
+      alert('Schema exported to console! Press F12 to view.');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Export failed: ${errorMessage}`);
+      console.error('Schema export error:', error);
+    }
   };
 
   return (

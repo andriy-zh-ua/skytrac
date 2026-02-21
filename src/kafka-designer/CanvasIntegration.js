@@ -12,7 +12,8 @@ export class KafkaCanvasIntegration {
       brokers: [],
       topics: [],
       producers: [],
-      consumers: []
+      consumers: [],
+      standalonePartitions: []
     });
     this.nodes = [];
     this.edges = [];
@@ -40,7 +41,7 @@ export class KafkaCanvasIntegration {
   handleAddTopic(position, config = {}) {
     const topicConfig = {
       name: config.name || `topic-${Date.now()}`,
-      partitions: config.partitions || 3,
+      partitions: config.partitions,
       replicationFactor: config.replicationFactor || 1,
       retentionMs: config.retentionMs || 604800000,
       cleanupPolicy: config.cleanupPolicy || 'delete'
@@ -125,6 +126,9 @@ export class KafkaCanvasIntegration {
       size: 0,
       createdAt: new Date()
     };
+
+    // Add to cluster
+    this.cluster.addStandalonePartition(newPartition);
 
     // Add to visualization nodes
     this.nodes.push({

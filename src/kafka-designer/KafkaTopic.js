@@ -5,12 +5,12 @@ export class KafkaTopic {
     this.config = config;
     this.partitions = new Map();
     this.createdAt = new Date();
-    this.validateTopic();
     this.initializePartitions();
   }
 
+  // Validate that topic has at least one partition
   validateTopic() {
-    if (!this.config.partitions || this.config.partitions < 1) {
+    if (!this.partitions || this.partitions.size === 0) {
       throw new Error('KafkaTopic must contain at least one KafkaPartition to be valid');
     }
   }
