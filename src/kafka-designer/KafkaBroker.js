@@ -2,6 +2,7 @@ export class KafkaBroker {
   constructor(config) {
     this.config = config;
     this.topics = new Map(); // Store topic objects, not just names
+    this.standalonePartitions = new Map(); // partitionId -> partition object
     this.isHealthy = true;
   }
 
@@ -35,6 +36,23 @@ export class KafkaBroker {
     return Array.from(this.topics.values());
   }
 
+  // Standalone partition management
+  addStandalonePartition(partition) {
+    this.standalonePartitions.set(partition.id, partition);
+  }
+
+  removeStandalonePartition(partitionId) {
+    this.standalonePartitions.delete(partitionId);
+  }
+
+  getStandalonePartition(partitionId) {
+    return this.standalonePartitions.get(partitionId);
+  }
+
+  getAllStandalonePartitions() {
+    return Array.from(this.standalonePartitions.values());
+  }
+
   // Health management
   setHealth(healthy) {
     this.isHealthy = healthy;
@@ -45,6 +63,7 @@ export class KafkaBroker {
     return {
       ...this.config,
       topics: Array.from(this.topics.values()).map(topic => topic.toJSON()),
+      standalonePartitions: Array.from(this.standalonePartitions.values()),
       isHealthy: this.isHealthy
     };
   }

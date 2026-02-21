@@ -128,16 +128,30 @@ export class KafkaCluster {
   }
 
   // Standalone partition management
-  addStandalonePartition(partition) {
-    this.config.standalonePartitions.push(partition);
+  addStandalonePartition(partition, brokerId) {
+    const broker = this.getBroker(brokerId);
+    if (!broker) {
+      throw new Error(`Broker ${brokerId} not found`);
+    }
+    broker.addStandalonePartition(partition);
   }
 
   removeStandalonePartition(partitionId) {
-    this.config.standalonePartitions = this.config.standalonePartitions.filter(p => p.id !== partitionId);
+    // Remove from all brokers
+    this.config.brokers.forEach(broker => {
+      broker.removeStandalonePartition(partitionId);
+    });
   }
 
   getStandalonePartition(partitionId) {
-    return this.config.standalonePartitions.find(p => p.id === partitionId);
+    // Search in all brokers
+    for (const broker of this.config.brokers) {
+      const partition = broker.getStandalonePartition(partitionId);
+      if (partition) {
+        return partition;
+      }
+    }
+    return null;
   }
 
   // Cluster health and statistics

@@ -304,10 +304,25 @@ const App = () => {
         }
       }
       
-      kafkaResult = kafkaIntegration.handleAddPartition({ x: 100, y: 100 }, {
+      // Determine if we're adding to a topic or broker
+      let partitionConfig: any = {
         id: `partition-${Date.now()}`,
         topic: 'default-topic'
-      });
+      };
+      
+      // If a topic is selected, add partition to that topic
+      if (currentObjects.topic) {
+        partitionConfig.topic = currentObjects.topic;
+        partitionConfig.brokerId = currentObjects.broker;
+      } else if (currentObjects.broker) {
+        // Add to broker (standalone partition)
+        partitionConfig.brokerId = currentObjects.broker;
+      } else {
+        alert('Please select a topic or broker first to add a partition');
+        return;
+      }
+      
+      kafkaResult = kafkaIntegration.handleAddPartition({ x: 100, y: 100 }, partitionConfig);
       setKafkaStats(kafkaIntegration.cluster.getClusterStats());
       
       // Select the newly added partition
@@ -647,8 +662,14 @@ const App = () => {
         topic.validateTopic();
       });
 
-      // No topics exist, check if we have standalone partitions
-      const standalonePartitionCount = kafkaIntegration.cluster.standalonePartitions.length;
+
+      // Count all standalone partitions from all brokers
+      let standalonePartitionCount = 0;
+      for (const broker of kafkaIntegration.cluster.brokers) {
+        standalonePartitionCount += broker.getAllStandalonePartitions()?.length || 0;
+      }
+      
+      // Validate we have at least one partition (from topics or standalone)
       if (standalonePartitionCount === 0) {
         throw new Error('Cluster must have at least one partition (from topics or standalone) to export schema');
       }

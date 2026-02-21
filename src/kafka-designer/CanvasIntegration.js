@@ -132,8 +132,11 @@ export class KafkaCanvasIntegration {
       createdAt: new Date()
     };
 
-    // Add to cluster
-    this.cluster.addStandalonePartition(newPartition);
+    // Add to cluster (require brokerId for standalone partitions)
+    if (!config.brokerId) {
+      throw new Error('Standalone partition must be assigned to a broker');
+    }
+    this.cluster.addStandalonePartition(newPartition, config.brokerId);
 
     // Add to visualization nodes
     this.nodes.push({
