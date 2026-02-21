@@ -39,16 +39,21 @@ export class KafkaCanvasIntegration {
   }
 
   handleAddTopic(position, config = {}) {
+    // Check if a broker is provided
+    if (!config.brokerId) {
+      throw new Error('Topic must be assigned to a broker');
+    }
+
     const topicConfig = {
       name: config.name || `topic-${Date.now()}`,
-      partitions: config.partitions,
+      partitions: config.partitions || 1, // Default to 1 partition if not specified
       replicationFactor: config.replicationFactor || 1,
       retentionMs: config.retentionMs || 604800000,
       cleanupPolicy: config.cleanupPolicy || 'delete'
     };
 
     const newTopic = new KafkaTopic(topicConfig);
-    this.cluster.addTopic(newTopic);
+    this.cluster.addTopic(newTopic, config.brokerId);
     this.updateCanvas();
     
     return {

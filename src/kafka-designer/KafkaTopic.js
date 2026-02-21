@@ -16,7 +16,10 @@ export class KafkaTopic {
   }
 
   initializePartitions() {
-    for (let i = 0; i < this.config.partitions; i++) {
+    // Ensure we have at least 1 partition
+    const partitionCount = this.config.partitions || 1;
+    
+    for (let i = 0; i < partitionCount; i++) {
       const partitionConfig = {
         id: i,
         leader: '',
@@ -77,7 +80,7 @@ export class KafkaTopic {
   toJSON() {
     return {
       ...this.config,
-      partitions: this.getAllPartitions().map(p => p.toJSON()),
+      partitions: this.getAllPartitions().map(p => p.toJSON ? p.toJSON() : p),
       createdAt: this.createdAt.toISOString()
     };
   }

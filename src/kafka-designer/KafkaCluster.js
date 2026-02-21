@@ -37,49 +37,65 @@ export class KafkaCluster {
   }
 
   // Topic management
-  addTopic(topic) {
-    this.config.topics.push(topic);
-    this.assignTopicToBrokers(topic);
+  addTopic(topic, brokerId) {
+    // Add topic to specific broker
+    const broker = this.getBroker(brokerId);
+    if (!broker) {
+      throw new Error(`Broker ${brokerId} not found`);
+    }
+    
+    // Assign topic object to broker (topics are stored under brokers, not globally)
+    broker.assignTopic(topic);
+    
+    // // Handle partition assignment
+    // this.assignTopicToBrokers(topic);
   }
 
   removeTopic(topicName) {
-    this.config.topics = this.config.topics.filter(t => t.name !== topicName);
+    // Remove topic from all brokers (topics are stored under brokers)
     this.config.brokers.forEach(broker => broker.removeTopic(topicName));
   }
 
   getTopic(topicName) {
-    return this.config.topics.find(t => t.name === topicName);
-  }
-
-  assignTopicToBrokers(topic) {
-    const healthyBrokers = this.config.brokers.filter(b => b.healthStatus);
-    const replicationFactor = Math.min(topic.replicationFactor, healthyBrokers.length);
-
-    topic.getAllPartitions().forEach(partition => {
-      // Assign leader
-      const leaderIndex = partition.id % healthyBrokers.length;
-      const leader = healthyBrokers[leaderIndex];
-      
-      // Assign replicas
-      const replicas = [];
-      for (let i = 0; i < replicationFactor; i++) {
-        const replicaIndex = (leaderIndex + i) % healthyBrokers.length;
-        replicas.push(healthyBrokers[replicaIndex].id);
+    // Search for topic in all brokers (topics are stored under brokers)
+    for (const broker of this.config.brokers) {
+      const topic = broker.getTopic(topicName);
+      if (topic) {
+        return topic;
       }
-
-      // Update partition assignment
-      topic.assignPartitionLeader(partition.id, leader.id);
-      topic.setPartitionReplicas(partition.id, replicas);
-
-      // Update broker topic assignments
-      replicas.forEach(brokerId => {
-        const broker = this.getBroker(brokerId);
-        if (broker) {
-          broker.assignTopic(topic.name);
-        }
-      });
-    });
+    }
+    return null;
   }
+
+  // assignTopicToBrokers(topic) {
+  //   const healthyBrokers = this.config.brokers.filter(b => b.healthStatus);
+  //   const replicationFactor = Math.min(topic.replicationFactor, healthyBrokers.length);
+
+  //   topic.getAllPartitions().forEach(partition => {
+  //     // Assign leader
+  //     const leaderIndex = partition.id % healthyBrokers.length;
+  //     const leader = healthyBrokers[leaderIndex];
+      
+  //     // Assign replicas
+  //     const replicas = [];
+  //     for (let i = 0; i < replicationFactor; i++) {
+  //       const replicaIndex = (leaderIndex + i) % healthyBrokers.length;
+  //       replicas.push(healthyBrokers[replicaIndex].id);
+  //     }
+
+  //     // Update partition assignment
+  //     topic.assignPartitionLeader(partition.id, leader.id);
+  //     topic.setPartitionReplicas(partition.id, replicas);
+
+  //     // Update broker topic assignments
+  //     replicas.forEach(brokerId => {
+  //       const broker = this.getBroker(brokerId);
+  //       if (broker) {
+  //         broker.assignTopic(topic); // Pass the topic object, not the name
+  //       }
+  //     });
+  //   });
+  // }
 
   // Producer management
   addProducer(producer) {
@@ -282,9 +298,16 @@ export class KafkaCluster {
     return {
       name: this.config.name,
       brokers: this.config.brokers.map(b => b.toJSON()),
-      topics: this.config.topics.map(t => t.toJSON()),
+      topics: [], // Topics are now included in broker JSON
       producers: this.config.producers.map(p => p.toJSON()),
       consumers: this.config.consumers.map(c => c.toJSON()),
+      standalonePartitions: this.config.standalonePartitions.map(p => ({
+        id: p.id,
+        topic: p.topic,
+        offset: p.offset,
+        size: p.size,
+        createdAt: p.createdAt
+      })),
       createdAt: this.createdAt.toISOString()
     };
   }

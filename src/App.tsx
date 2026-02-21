@@ -40,9 +40,9 @@ const App = () => {
   const [kafkaIntegration] = useState(() => new KafkaCanvasIntegration());
   const [kafkaStats, setKafkaStats] = useState(kafkaIntegration.cluster.getClusterStats());
 
-  // React Flow state hooks
-  const [nodes, setNodes, onNodesChangeOriginal] = useNodesState(initialNodes as any);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges as any);
+  // React Flow state hooks - initialize from Kafka cluster
+  const [nodes, setNodes, onNodesChangeOriginal] = useNodesState(kafkaIntegration.nodes as any);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(kafkaIntegration.edges as any);
 
   // Custom onNodesChange that handles broker-partition movement
   const onNodesChange = useCallback(
@@ -146,6 +146,11 @@ const App = () => {
         const deletedBrokers = nodesToDelete.filter(node => node.type === 'broker');
         
         if (deletedBrokers.length > 0) {
+          // Check if current selected broker is being deleted
+          if (currentObjects.broker && deletedBrokers.some(broker => broker.id === currentObjects.broker)) {
+            setCurrentObjects(prev => ({ ...prev, broker: null }));
+          }
+          
           // Find all partitions associated with deleted brokers
           const partitionsToRemove = nds.filter(node => 
             node.type === 'partition' && 
@@ -230,14 +235,38 @@ const App = () => {
     if (type === 'broker') {
       kafkaResult = kafkaIntegration.handleAddBroker({ x: 100, y: 100 });
       setKafkaStats(kafkaIntegration.cluster.getClusterStats());
+      
+      // The new broker should be the active one after creation
+      const newBrokerId = kafkaResult.broker.id;
+      
+      // Select the newly added broker
+      selectNode(newBrokerId);
 
     } else if (type === 'topic') {
+      // Check if a broker is selected
+      if (!currentObjects.broker) {
+        alert('Please select a broker first to assign the topic to');
+        return;
+      }
+      
+      // Validate that the selected broker still exists
+      const selectedBroker = kafkaIntegration.cluster.getBroker(currentObjects.broker);
+      if (!selectedBroker) {
+        alert('Selected broker no longer exists. Please select a different broker.');
+        clearSelection('broker');
+        return;
+      }
+      
       kafkaResult = kafkaIntegration.handleAddTopic({ x: 100, y: 100 }, {
         name: label,
-        partitions: 3,
-        replicationFactor: 1
+        brokerId: currentObjects.broker
       });
       setKafkaStats(kafkaIntegration.cluster.getClusterStats());
+      
+      // Select the newly added topic
+      if (kafkaResult.topic) {
+        selectNode(kafkaResult.topic.name);
+      }
 
     } else if (type === 'producer') {
       kafkaResult = kafkaIntegration.handleAddProducer({ x: 100, y: 100 }, {
@@ -245,6 +274,11 @@ const App = () => {
         clientId: `producer-client-${Date.now()}`
       });
       setKafkaStats(kafkaIntegration.cluster.getClusterStats());
+      
+      // Select the newly added producer
+      if (kafkaResult.producer) {
+        selectNode(kafkaResult.producer.id);
+      }
 
     } else if (type === 'consumer') {
       kafkaResult = kafkaIntegration.handleAddConsumer({ x: 100, y: 100 }, {
@@ -253,13 +287,33 @@ const App = () => {
         clientId: `consumer-client-${Date.now()}`
       });
       setKafkaStats(kafkaIntegration.cluster.getClusterStats());
+      
+      // Select the newly added consumer
+      if (kafkaResult.consumer) {
+        selectNode(kafkaResult.consumer.id);
+      }
 
     } else if (type === 'partition') {
+      // Validate that the selected broker still exists (if one is selected)
+      if (currentObjects.broker) {
+        const selectedBroker = kafkaIntegration.cluster.getBroker(currentObjects.broker);
+        if (!selectedBroker) {
+          alert('Selected broker no longer exists. Please select a different broker.');
+          clearSelection('broker');
+          return;
+        }
+      }
+      
       kafkaResult = kafkaIntegration.handleAddPartition({ x: 100, y: 100 }, {
         id: `partition-${Date.now()}`,
         topic: 'default-topic'
       });
       setKafkaStats(kafkaIntegration.cluster.getClusterStats());
+      
+      // Select the newly added partition
+      if (kafkaResult.partition) {
+        selectNode(kafkaResult.partition.id);
+      }
     }
     
     // Special positioning logic
@@ -377,11 +431,6 @@ const App = () => {
         newNode
       ];
       
-      // Update currentObjects for the new node type
-      if (type === 'broker' && newNode.id) {
-        setCurrentObjects(prev => ({ ...prev, broker: newNode.id }));
-      }
-      
       return updatedNodes;
     });
   };
@@ -413,14 +462,30 @@ const App = () => {
   // Simple selection function - select one node, deselect others, and track current objects
   const selectNode = (nodeId: string) => {
     setNodes((nds) => {
+      console.log('selectNode called with nodeId:', nodeId);
+      console.log('Current nodes in canvas:', nds.map(n => ({ id: n.id, type: n.type })));
+      
       const clickedNode = nds.find(n => n.id === nodeId);
-      if (!clickedNode) return nds;
+      console.log('Found clickedNode:', clickedNode ? { id: clickedNode.id, type: clickedNode.type } : 'NOT FOUND');
+      
+      if (!clickedNode) {
+        console.warn('Node not found in canvas, but proceeding with selection');
+        // Return early, we'll handle currentObjects update outside
+        return nds;
+      }
       
       // Update current objects for this category
-      setCurrentObjects(prev => ({
-        ...prev,
-        [clickedNode.type as string]: nodeId
-      }));
+      console.log(`selectNode: Setting ${clickedNode.type} to ${nodeId}`);
+      console.log('Previous currentObjects:', currentObjects);
+      
+      setCurrentObjects(prev => {
+        const updated = {
+          ...prev,
+          [clickedNode.type as string]: nodeId
+        };
+        console.log('Updated currentObjects:', updated);
+        return updated;
+      });
       
       return nds.map((node) =>
         node.id === nodeId
@@ -428,6 +493,42 @@ const App = () => {
           : { ...node, selected: false }
       );
     });
+    
+    // Handle case where node not found in canvas - update currentObjects separately
+    const clickedNode = nodes.find(n => n.id === nodeId);
+    if (!clickedNode) {
+      console.warn('Node not found in canvas, updating currentObjects separately');
+      // Try to determine node type from ID
+      const nodeType = nodeId.includes('broker') ? 'broker' : 
+                      nodeId.includes('topic') ? 'topic' :
+                      nodeId.includes('producer') ? 'producer' :
+                      nodeId.includes('consumer') ? 'consumer' :
+                      nodeId.includes('partition') ? 'partition' : 'unknown';
+      
+      setCurrentObjects(prev => {
+        const updated = {
+          ...prev,
+          [nodeType]: nodeId
+        };
+        console.log('Updated currentObjects (node not in canvas):', updated);
+        return updated;
+      });
+    }
+  };
+
+  // Clear selection for a specific node type
+  const clearSelection = (nodeType: string) => {
+    setCurrentObjects(prev => ({
+      ...prev,
+      [nodeType]: null
+    }));
+    
+    // Also clear visual selection for nodes of this type
+    setNodes((nds) => nds.map(node => 
+      node.type === nodeType 
+        ? { ...node, selected: false }
+        : node
+    ));
   };
 
   // Toggle producer active state (green/transmitting) - only if connected to partition

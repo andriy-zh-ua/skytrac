@@ -1,7 +1,7 @@
 export class KafkaBroker {
   constructor(config) {
     this.config = config;
-    this.topics = new Set();
+    this.topics = new Map(); // Store topic objects, not just names
     this.isHealthy = true;
   }
 
@@ -15,8 +15,8 @@ export class KafkaBroker {
   get healthStatus() { return this.isHealthy; }
 
   // Topic management
-  assignTopic(topicName) {
-    this.topics.add(topicName);
+  assignTopic(topic) {
+    this.topics.set(topic.name, topic);
   }
 
   removeTopic(topicName) {
@@ -25,6 +25,14 @@ export class KafkaBroker {
 
   hasTopic(topicName) {
     return this.topics.has(topicName);
+  }
+
+  getTopic(topicName) {
+    return this.topics.get(topicName);
+  }
+
+  getAllTopics() {
+    return Array.from(this.topics.values());
   }
 
   // Health management
@@ -36,14 +44,14 @@ export class KafkaBroker {
   toJSON() {
     return {
       ...this.config,
-      topics: Array.from(this.topics),
+      topics: Array.from(this.topics.values()).map(topic => topic.toJSON()),
       isHealthy: this.isHealthy
     };
   }
 
   static fromJSON(data) {
     const broker = new KafkaBroker(data);
-    data.topics?.forEach(topic => broker.assignTopic(topic));
+    // Note: Topics will be reconstructed from JSON at cluster level
     broker.setHealth(data.isHealthy ?? true);
     return broker;
   }
