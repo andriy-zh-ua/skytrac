@@ -21,6 +21,7 @@ const PartitionNode = props => {
       onClick={onClick}
     >
       {id}
+      
       {/* Input handle on the left */}
       <Handle type="target" position={Position.Left} />
       {/* Output handle on the right */}

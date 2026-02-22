@@ -20,6 +20,7 @@ const ConsumerNode = props => {
       onClick={onClick}
     >
       {id}
+      
       {/* Input handle on the left - receives from Topics */}
       <Handle type="target" position={Position.Left} />
     </div>

@@ -27,7 +27,7 @@ const ProducerNode = props => {
   };
 
   return (
-   <div
+    <div
       style={{
         display: 'flex',
         flexDirection: 'column',
