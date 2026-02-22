@@ -607,7 +607,6 @@ const App = () => {
           console.log('Topic onClick called with props.id:', props.id);
           selectNode(props.id);
         }} 
-        onDuplicate={() => duplicateTopic(props.id)} 
       />;
     },
     consumer: (props: any) => <ConsumerNode {...props} onClick={() => selectNode(props.id)} />,
@@ -631,37 +630,6 @@ const App = () => {
       />;
     },
     partition: (props: any) => <PartitionNode {...props} onClick={() => selectNode(props.id)} />,
-  };
-
-  // Duplicate topic function
-  const duplicateTopic = (topicId: string) => {
-    const originalTopic = nodes.find(n => n.id === topicId);
-    if (!originalTopic) return;
-
-    // Create new topic with same name but unique ID
-    const newTopic: Node = {
-      id: `${originalTopic.id}-copy-${Date.now()}`, // Keep original ID but add copy suffix
-      type: 'topic',
-      position: { 
-        x: originalTopic.position.x + 50, 
-        y: originalTopic.position.y + 50 
-      },
-      data: { 
-        label: originalTopic.data.label, // Keep same name
-        // Copy brokerId if original topic has one
-        ...(originalTopic.data.brokerId ? { brokerId: originalTopic.data.brokerId } : {})
-      },
-      selected: true,
-      zIndex: 1000,
-    };
-
-    setNodes((nds) => [
-      ...nds.map(node => ({ ...node, selected: false })),
-      newTopic
-    ]);
-
-    // Update current objects for the new topic
-    setCurrentObjects(prev => ({ ...prev, topic: newTopic.id }));
   };
 
   // Update edges with animation for active producers
