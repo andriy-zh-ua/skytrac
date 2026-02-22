@@ -7,26 +7,55 @@ export const NodeTypes = {
       <ProducerNode 
         {...props} 
         hasConnections={hasConnections}
-        onClick={() => props.selectNode(props.id)} 
-        onDoubleClick={() => hasConnections ? props.toggleProducerActive(props.id) : undefined} 
+        onClick={() => {
+          if (props.data?.selectNode) {
+            props.data.selectNode(props.id);
+          }
+        }}
       />
     );
   },
+  consumer: props => (
+    <ConsumerNode 
+      {...props} 
+      onClick={() => {
+        if (props.data?.selectNode) {
+          props.data.selectNode(props.id);
+        }
+      }} />
+  ),
+  broker: props => (
+    <BrokerNode 
+      {...props} 
+      isCurrentBroker={props.data?.currentObjects?.broker === props.id} 
+      onClick={() => {
+        if (props.data?.selectNode) {
+          props.data.selectNode(props.id);
+        }
+      }} 
+    />
+  ),  
   topic: props => (
     <TopicNode 
       {...props} 
       selected={props.selected}
-      isCurrentTopic={props.currentObjects?.topic === props.id}
-      onClick={() => props.selectNode(props.id)} 
+      isCurrentTopic={props.data?.currentObjects?.topic === props.id}
+      onClick={() => {
+        if (props.data?.selectNode) {
+          props.data.selectNode(props.id);
+        }
+      }} 
     />
   ),
-  consumer: props => <ConsumerNode {...props} onClick={() => props.selectNode(props.id)} />,
-  broker: props => (
-    <BrokerNode 
+  partition: props => (
+    <PartitionNode 
       {...props} 
-      isCurrentBroker={props.currentObjects?.broker === props.id} 
-      onClick={() => props.selectNode(props.id)} 
+      isCurrentPartition={props.data?.currentObjects?.partition === props.id}
+      onClick={() => {
+        if (props.data?.selectNode) {
+          props.data.selectNode(props.id);
+        }
+      }} 
     />
-  ),
-  partition: (props) => <PartitionNode {...props} onClick={() => props.selectNode(props.id)} />,
+  )
 };
