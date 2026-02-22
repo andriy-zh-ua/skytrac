@@ -601,6 +601,8 @@ const App = () => {
       
       return <TopicNode 
         {...props} 
+        selected={props.selected}
+        isCurrentTopic={currentObjects.topic === props.id}
         onClick={() => {
           console.log('Topic onClick called with props.id:', props.id);
           selectNode(props.id);

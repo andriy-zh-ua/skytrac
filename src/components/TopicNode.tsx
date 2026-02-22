@@ -2,12 +2,15 @@ import { Handle, Position } from '@xyflow/react';
 
 interface TopicNodeProps {
   data: { label: string };
+  selected?: boolean;
+  isCurrentTopic?: boolean;
   onClick?: () => void;
   onDuplicate?: () => void;
 }
 
 // TopicNode: Green box representing a Kafka topic
-const TopicNode = ({ data, onClick, onDuplicate }: TopicNodeProps) => {
+const TopicNode = ({ data, selected, isCurrentTopic, onClick, onDuplicate }: TopicNodeProps) => {
+  const showBorder = selected || isCurrentTopic;
   return (
     <div
       data-type="topic"
@@ -16,7 +19,7 @@ const TopicNode = ({ data, onClick, onDuplicate }: TopicNodeProps) => {
         borderRadius: '8px',
         background: '#66bb6a',
         color: 'white',
-        border: '2px solid #388e3c',
+        border: showBorder ? '3px solid #388e3c' : 'none',
         minWidth: '150px',
         minHeight: '50px',
         fontSize: '14px',
