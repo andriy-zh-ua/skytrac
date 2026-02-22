@@ -590,7 +590,24 @@ const App = () => {
         />
       );
     },
-    topic: (props: any) => <TopicNode {...props} onClick={() => selectNode(props.id)} onDuplicate={() => duplicateTopic(props.id)} />,
+    topic: (props: any) => {
+      console.log('=== TOPIC NODE DEBUG ===');
+      console.log('Topic node props.id:', props.id);
+      console.log('Topic node data:', props.data);
+      
+      // Check if this topic exists in cluster
+      const clusterTopic = kafkaIntegration.cluster.topics.find(t => t.name === props.id);
+      console.log('Topic in cluster:', clusterTopic ? clusterTopic.name : 'NOT FOUND');
+      
+      return <TopicNode 
+        {...props} 
+        onClick={() => {
+          console.log('Topic onClick called with props.id:', props.id);
+          selectNode(props.id);
+        }} 
+        onDuplicate={() => duplicateTopic(props.id)} 
+      />;
+    },
     consumer: (props: any) => <ConsumerNode {...props} onClick={() => selectNode(props.id)} />,
     broker: (props: any) => {
       console.log('=== BROKER NODE DEBUG ===');
