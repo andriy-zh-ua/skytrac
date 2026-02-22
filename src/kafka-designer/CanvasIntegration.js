@@ -46,7 +46,7 @@ export class KafkaCanvasIntegration {
 
     const topicConfig = {
       name: config.name || `topic-${Date.now()}`,
-      partitions: config.partitions || 1, // Default to 1 partition if not specified
+      partitions: config.partitions || 0, // No default partitions
       replicationFactor: config.replicationFactor || 1,
       retentionMs: config.retentionMs || 604800000,
       cleanupPolicy: config.cleanupPolicy || 'delete'

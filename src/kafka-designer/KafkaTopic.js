@@ -16,8 +16,8 @@ export class KafkaTopic {
   }
 
   initializePartitions() {
-    // Ensure we have at least 1 partition
-    const partitionCount = this.config.partitions || 1;
+    // Only create partitions if explicitly specified
+    const partitionCount = this.config.partitions || 0;
     
     for (let i = 0; i < partitionCount; i++) {
       const partitionConfig = {
