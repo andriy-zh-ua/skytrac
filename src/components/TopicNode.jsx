@@ -1,5 +1,5 @@
 // Node to represent a Kafka topic
-const TopicNode = (props: any) => {
+const TopicNode = props => {
   const { id, selected, isCurrentTopic, onClick } = props;
   const showBorder = selected || isCurrentTopic;
   return (

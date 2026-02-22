@@ -1,5 +1,5 @@
 // Node to represent a Kafka broker
-const BrokerNode = (props: any) => {
+const BrokerNode = props => {
   const { id, selected, isCurrentBroker, onClick } = props;
   const showBorder = selected || isCurrentBroker;
   return (

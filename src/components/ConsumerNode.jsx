@@ -1,7 +1,7 @@
 import { Handle, Position } from '@xyflow/react';
 
 // Node to represent a Kafka consumer
-const ConsumerNode = (props: any) => {
+const ConsumerNode = props => {
   const { id, onClick } = props;
   return (
     <div

@@ -1,7 +1,7 @@
 import { Handle, Position } from '@xyflow/react';
 
 // Node to represent a Kafka partition
-const PartitionNode = (props: any) => {
+const PartitionNode = props => {
   const { id, onClick } = props;
   return (
     <div

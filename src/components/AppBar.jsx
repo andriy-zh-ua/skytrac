@@ -1,21 +1,6 @@
-import React from 'react';
 import { AppBar, Toolbar, Button, Typography, Box } from '@mui/material';
 
-interface AppBarProps {
-  onAddNode: (type: 'producer' | 'topic' | 'consumer' | 'broker' | 'partition') => void;
-  hasBrokers: boolean;
-  onExportSchema: () => void;
-  kafkaStats?: {
-    brokerCount: number;
-    topicCount: number;
-    partitionCount: number;
-    producerCount: number;
-    consumerCount: number;
-    healthStatus: boolean;
-  };
-}
-
-const CustomAppBar: React.FC<AppBarProps> = ({ onAddNode, hasBrokers, onExportSchema, kafkaStats }) => {
+const CustomAppBar = ({ onAddNode, hasBrokers, onExportSchema, kafkaStats }) => {
   return (
     <AppBar position="static">
       <Toolbar>

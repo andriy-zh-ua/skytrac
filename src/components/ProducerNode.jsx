@@ -1,11 +1,10 @@
-import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 
 // Node to represent a Kafka producer
-const ProducerNode = (props: any) => {
+const ProducerNode = props => {
   const { id, onClick, onDoubleClick, hasConnections } = props;
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = e => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -14,10 +13,10 @@ const ProducerNode = (props: any) => {
     }
   };
 
-  const handleActivate = (e: React.MouseEvent) => {
+  const handleActivate = e => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Activate button clicked');
+    
     if (hasConnections && onDoubleClick) {
       onDoubleClick();
     }
@@ -28,7 +27,7 @@ const ProducerNode = (props: any) => {
   };
 
   return (
-    <div
+   <div
       style={{
         display: 'flex',
         flexDirection: 'column',
