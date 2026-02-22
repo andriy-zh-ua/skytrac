@@ -592,7 +592,25 @@ const App = () => {
     },
     topic: (props: any) => <TopicNode {...props} onClick={() => selectNode(props.id)} onDuplicate={() => duplicateTopic(props.id)} />,
     consumer: (props: any) => <ConsumerNode {...props} onClick={() => selectNode(props.id)} />,
-    broker: (props: any) => <BrokerNode {...props} selected={props.selected} isCurrentBroker={currentObjects.broker === props.id} onClick={() => selectNode(props.id)} />,
+    broker: (props: any) => {
+      console.log('=== BROKER NODE DEBUG ===');
+      console.log('Broker node props.id:', props.id);
+      console.log('Broker node data:', props.data);
+      
+      // Check if this broker exists in cluster
+      const clusterBroker = kafkaIntegration.cluster.getBroker(props.id);
+      console.log('Broker in cluster:', clusterBroker ? clusterBroker.id : 'NOT FOUND');
+      
+      return <BrokerNode 
+        {...props} 
+        selected={props.selected} 
+        isCurrentBroker={currentObjects.broker === props.id} 
+        onClick={() => {
+          console.log('Broker onClick called with props.id:', props.id);
+          selectNode(props.id);
+        }} 
+      />;
+    },
     partition: (props: any) => <PartitionNode {...props} onClick={() => selectNode(props.id)} />,
   };
 

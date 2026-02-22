@@ -21,6 +21,7 @@ export class KafkaCanvasIntegration {
 
   // Event Handlers
   handleAddBroker(position) {
+    // Create a new broker
     const newBroker = new KafkaBroker({
       id: `broker-${Date.now()}`,
       host: 'localhost',
