@@ -45,51 +45,73 @@ const App = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(kafkaIntegration.edges as any);
 
   // Custom onNodesChange that handles broker-partition movement
-  const onNodesChange = useCallback(
-    (changes: NodeChange[]) => {
-      setNodes((nds) => {
-        let updatedNodes = applyNodeChanges(changes, nds);
-        
-        // Check if any broker was moved
-        const brokerChanges = changes.filter((change: NodeChange) => 
-          change.type === 'position' && 
-          nds.find((n: Node) => n.id === change.id && n.type === 'broker')
-        );
-        
-        if (brokerChanges.length > 0) {
-          // Move associated partitions and topics with their brokers
-          updatedNodes = updatedNodes.map((node: Node) => {
-            if (node.type === 'partition' || node.type === 'topic') {
-              // Find the broker this node belongs to
-              const broker = nds.find((n: Node) => n.id === node.data.brokerId && n.type === 'broker');
-              if (broker) {
-                // Find the corresponding updated broker
-                const updatedBroker = updatedNodes.find((n: Node) => n.id === broker.id && n.type === 'broker');
-                if (updatedBroker) {
-                  // Calculate the position difference
-                  const deltaX = updatedBroker.position.x - broker.position.x;
-                  const deltaY = updatedBroker.position.y - broker.position.y;
-                  
-                  // Move the node by the same amount, maintaining centered position
-                  return {
-                    ...node,
-                    position: {
-                      x: node.position.x + deltaX,
-                      y: node.position.y + deltaY
-                    }
-                  };
-                }
+  const onNodesChange = useCallback((changes: NodeChange[]) => {
+    setNodes((nds) => {
+      let updatedNodes = applyNodeChanges(changes, nds);
+      
+      // Check if any broker was moved
+      const brokerChanges = changes.filter((change: NodeChange) => 
+        change.type === 'position' && 
+        nds.find((n: Node) => n.id === change.id && n.type === 'broker')
+      );
+      
+      if (brokerChanges.length > 0) {
+        // Move associated partitions and topics with their brokers
+        updatedNodes = updatedNodes.map((node: Node) => {
+          if (node.type === 'partition' || node.type === 'topic') {
+            // Find the broker this node belongs to
+            const broker = nds.find((n: Node) => n.id === node.data.brokerId && n.type === 'broker');
+            if (broker) {
+              // Find the corresponding updated broker
+              const updatedBroker = updatedNodes.find((n: Node) => n.id === broker.id && n.type === 'broker');
+              if (updatedBroker) {
+                // Calculate position difference
+                const deltaX = updatedBroker.position.x - broker.position.x;
+                const deltaY = updatedBroker.position.y - broker.position.y;
+                
+                // Move the node by the same amount, maintaining centered position
+                return {
+                  ...node,
+                  position: {
+                    x: node.position.x + deltaX,
+                    y: node.position.y + deltaY
+                  }
+                };
               }
             }
-            return node;
-          });
-        }
-        
-        return updatedNodes;
-      });
-    },
-    []
-  );
+          }
+          return node;
+        });
+      }
+      
+      return updatedNodes;
+    });
+  }, []);
+
+  // Clear selection helper function
+  const clearSelection = useCallback((typeToKeep?: string) => {
+    setCurrentObjects({
+      producer: null,
+      topic: null,
+      consumer: null,
+      broker: typeToKeep === 'broker' ? currentObjects.broker : null,
+      partition: null
+    });
+    
+    // Clear visual selection in React Flow
+    setNodes((nds) => 
+      nds.map(node => ({ ...node, selected: false }))
+    );
+  }, []);
+
+  // Handle clicks on empty canvas to deselect all objects
+  const onPaneClick = useCallback((event: React.MouseEvent) => {
+    // Check if click is on empty canvas (no node target)
+    if (event.target === event.currentTarget) {
+      clearSelection();
+    }
+  }, []);
+
   const [counters, setCounters] = useState({
     producer: 0,
     topic: 0,
@@ -531,22 +553,6 @@ const App = () => {
     }
   };
 
-  // Clear selection for a specific node type
-  const clearSelection = (nodeType: string) => {
-    setCurrentObjects(prev => ({
-      ...prev,
-      [nodeType]: null
-    }));
-    
-    // Also clear visual selection for nodes of this type
-    setNodes((nds) => nds.map(node => 
-      node.type === nodeType 
-        ? { ...node, selected: false }
-        : node
-    ));
-  };
-
-  // Toggle producer active state (green/transmitting) - only if connected to partition
   const toggleProducerActive = (nodeId: string) => {
     // Check if producer has connection to a partition
     const hasPartitionConnection = edges.some(edge => 
@@ -732,6 +738,7 @@ const App = () => {
           onConnect={onConnect}
           onConnectStart={onConnectStart}
           onNodesDelete={onNodesDelete}
+          onPaneClick={onPaneClick}
           nodeTypes={nodeTypes}
           fitView
         >
