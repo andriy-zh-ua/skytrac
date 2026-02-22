@@ -144,7 +144,6 @@ export class KafkaCanvasIntegration {
       id: newPartition.id,
       type: 'partition',
       label: `Partition ${newPartition.id}`,
-      data: newPartition,
       position: position || { x: 0, y: 0 }
     });
 

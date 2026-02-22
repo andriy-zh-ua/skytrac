@@ -1,12 +1,8 @@
 import { Handle, Position } from '@xyflow/react';
 
-interface ConsumerNodeProps {
-  data: { label: string };
-  onClick?: () => void;
-}
-
-// ConsumerNode: Orange box representing a Kafka consumer
-const ConsumerNode = ({ data, onClick }: ConsumerNodeProps) => {
+// Node to represent a Kafka consumer
+const ConsumerNode = (props: any) => {
+  const { id, onClick } = props;
   return (
     <div
       data-type="consumer"
@@ -23,7 +19,7 @@ const ConsumerNode = ({ data, onClick }: ConsumerNodeProps) => {
       }}
       onClick={onClick}
     >
-      {data.label}
+      {id}
       {/* Input handle on the left - receives from Topics */}
       <Handle type="target" position={Position.Left} />
     </div>

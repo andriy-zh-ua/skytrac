@@ -1,14 +1,6 @@
-import { Handle, Position } from '@xyflow/react';
-
-interface TopicNodeProps {
-  data: { label: string };
-  selected?: boolean;
-  isCurrentTopic?: boolean;
-  onClick?: () => void;
-}
-
-// TopicNode: Green box representing a Kafka topic
-const TopicNode = ({ data, selected, isCurrentTopic, onClick }: TopicNodeProps) => {
+// Node to represent a Kafka topic
+const TopicNode = (props: any) => {
+  const { id, selected, isCurrentTopic, onClick } = props;
   const showBorder = selected || isCurrentTopic;
   return (
     <div
@@ -32,7 +24,7 @@ const TopicNode = ({ data, selected, isCurrentTopic, onClick }: TopicNodeProps) 
       onClick={onClick}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-        <span>{data.label}</span>
+        <span>{id}</span>
       </div>
     </div>
   );

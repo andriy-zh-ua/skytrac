@@ -1,14 +1,6 @@
-import { Handle, Position } from '@xyflow/react';
-
-interface BrokerNodeProps {
-  data: { label: string };
-  selected?: boolean;
-  isCurrentBroker?: boolean;
-  onClick?: () => void;
-}
-
-// BrokerNode: Blue box representing a Kafka broker
-const BrokerNode = ({ data, selected, isCurrentBroker, onClick }: BrokerNodeProps) => {
+// Node to represent a Kafka broker
+const BrokerNode = (props: any) => {
+  const { id, selected, isCurrentBroker, onClick } = props;
   const showBorder = selected || isCurrentBroker;
   return (
     <div
@@ -30,7 +22,7 @@ const BrokerNode = ({ data, selected, isCurrentBroker, onClick }: BrokerNodeProp
       }}
       onClick={onClick}
     >
-      {data.label}
+      {id}
     </div>
   );
 };
