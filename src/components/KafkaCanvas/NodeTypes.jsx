@@ -2,16 +2,14 @@ import { BrokerNode, TopicNode, ConsumerNode, ProducerNode, PartitionNode } from
 
 export const NodeTypes = {
   producer: props => {
-    const hasConnections = props.edges?.some(edge => edge.source === props.id) || false;
     return (
       <ProducerNode 
         {...props} 
-        hasConnections={hasConnections}
         onClick={() => {
-          if (props.data?.selectNode) {
-            props.data.selectNode(props.id);
+          if (props.selectNode) {
+            props.selectNode(props.id);
           }
-        }}
+        }} 
       />
     );
   },
@@ -19,30 +17,31 @@ export const NodeTypes = {
     <ConsumerNode 
       {...props} 
       onClick={() => {
-        if (props.data?.selectNode) {
-          props.data.selectNode(props.id);
+        if (props.selectNode) {
+          props.selectNode(props.id);
         }
-      }} />
+      }} 
+    />
   ),
   broker: props => (
     <BrokerNode 
       {...props} 
-      isCurrentBroker={props.data?.currentObjects?.broker === props.id} 
+      isCurrentBroker={props.currentObjects?.broker === props.id} 
       onClick={() => {
-        if (props.data?.selectNode) {
-          props.data.selectNode(props.id);
+        if (props.selectNode) {
+          props.selectNode(props.id);
         }
-      }} 
+      }}
     />
   ),  
   topic: props => (
     <TopicNode 
       {...props} 
       selected={props.selected}
-      isCurrentTopic={props.data?.currentObjects?.topic === props.id}
+      isCurrentTopic={props.currentObjects?.topic === props.id}
       onClick={() => {
-        if (props.data?.selectNode) {
-          props.data.selectNode(props.id);
+        if (props.selectNode) {
+          props.selectNode(props.id);
         }
       }} 
     />
@@ -50,10 +49,10 @@ export const NodeTypes = {
   partition: props => (
     <PartitionNode 
       {...props} 
-      isCurrentPartition={props.data?.currentObjects?.partition === props.id}
+      isCurrentPartition={props.currentObjects?.partition === props.id}
       onClick={() => {
-        if (props.data?.selectNode) {
-          props.data.selectNode(props.id);
+        if (props.selectNode) {
+          props.selectNode(props.id);
         }
       }} 
     />

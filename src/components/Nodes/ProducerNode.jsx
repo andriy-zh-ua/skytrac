@@ -2,7 +2,7 @@ import { Handle, Position } from '@xyflow/react';
 
 // Node to represent a Kafka producer
 const ProducerNode = props => {
-  const { id, onClick, onDoubleClick, hasConnections } = props;
+  const { id, onClick, hasConnections, toggleProducerActive } = props;
 
   const handleClick = e => {
     e.preventDefault();
@@ -17,8 +17,8 @@ const ProducerNode = props => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (hasConnections && onDoubleClick) {
-      onDoubleClick();
+    if (hasConnections && toggleProducerActive) {
+      toggleProducerActive(id);
     }
     // Also select the producer when activate/deactivate button is clicked
     if (onClick) {
