@@ -2,7 +2,8 @@ import { Handle, Position } from '@xyflow/react';
 
 // Node to represent a Kafka partition
 const PartitionNode = props => {
-  const { id, onClick } = props;
+  const { id, selected, isCurrentTopic, onClick } = props;
+  const showBorder = selected || isCurrentTopic;
   return (
     <div
       data-type="partition"
@@ -11,7 +12,7 @@ const PartitionNode = props => {
         borderRadius: '8px',
         background: '#ab47bc',
         color: 'white',
-        border: 'none',
+        border: showBorder ? '3px solid #ab47bc' : 'none',
         minWidth: '120px',
         textAlign: 'center',
         fontWeight: 'bold',
