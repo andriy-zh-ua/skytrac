@@ -5,11 +5,6 @@ export const NodeTypes = {
     return (
       <ProducerNode 
         {...props} 
-        onClick={() => {
-          if (props.selectNode) {
-            props.selectNode(props.id);
-          }
-        }} 
       />
     );
   },
