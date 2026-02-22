@@ -1,7 +1,7 @@
 import { BrokerNode, TopicNode, ConsumerNode, ProducerNode, PartitionNode } from '../Nodes/index.js';
 
 export const NodeTypes = {
-  producer: (props) => {
+  producer: props => {
     const hasConnections = props.edges?.some(edge => edge.source === props.id) || false;
     return (
       <ProducerNode 
@@ -12,7 +12,7 @@ export const NodeTypes = {
       />
     );
   },
-  topic: (props) => (
+  topic: props => (
     <TopicNode 
       {...props} 
       selected={props.selected}
@@ -20,8 +20,8 @@ export const NodeTypes = {
       onClick={() => props.selectNode(props.id)} 
     />
   ),
-  consumer: (props) => <ConsumerNode {...props} onClick={() => props.selectNode(props.id)} />,
-  broker: (props) => (
+  consumer: props => <ConsumerNode {...props} onClick={() => props.selectNode(props.id)} />,
+  broker: props => (
     <BrokerNode 
       {...props} 
       isCurrentBroker={props.currentObjects?.broker === props.id} 

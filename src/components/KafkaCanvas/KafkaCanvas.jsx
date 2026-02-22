@@ -1,7 +1,6 @@
 import { Box } from '@mui/material';
-import { ReactFlow, MiniMap, Controls, Background } from '@xyflow/react';
+import { ReactFlow } from '@xyflow/react';
 import { NodeTypes } from './NodeTypes.jsx';
-import { CanvasHandlers } from './CanvasHandlers.jsx';
 import { CanvasControls } from './CanvasControls.jsx';
 
 export const KafkaCanvas = ({ 

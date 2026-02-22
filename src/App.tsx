@@ -21,12 +21,9 @@ import { Box } from '@mui/material';
 import { KafkaCanvasIntegration } from './kafka-designer/CanvasIntegration.js';
 
 // Custom node components
-import ProducerNode from './components/ProducerNode';
-import TopicNode from './components/TopicNode';
-import ConsumerNode from './components/ConsumerNode';
-import BrokerNode from './components/BrokerNode';
-import PartitionNode from './components/PartitionNode';
-import CustomAppBar from './components/AppBar';
+import { ProducerNode, TopicNode, ConsumerNode, BrokerNode, PartitionNode } from './components/Nodes/index.js';
+import { KafkaCanvas } from './components/KafkaCanvas/KafkaCanvas.jsx';
+import CustomAppBar from './components/AppBar.jsx';
 
 // Configuration
 import { animationConfig } from './config/animation';
@@ -733,24 +730,16 @@ const App = () => {
       />
 
       {/* React Flow Canvas */}
-      <Box sx={{ flexGrow: 1 }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={updatedEdges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onConnectStart={onConnectStart}
-          onNodesDelete={onNodesDelete}
-          onPaneClick={onPaneClick}
-          nodeTypes={nodeTypes}
-          fitView
-        >
-          <MiniMap />
-          <Controls />
-          <Background />
-        </ReactFlow>
-      </Box>
+      <KafkaCanvas
+        nodes={nodes}
+        edges={updatedEdges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onConnectStart={onConnectStart}
+        onNodesDelete={onNodesDelete}
+        onPaneClick={onPaneClick}
+      />
     </Box>
   );
 }
