@@ -621,7 +621,6 @@ const App = () => {
       
       return <BrokerNode 
         {...props} 
-        selected={props.selected} 
         isCurrentBroker={currentObjects.broker === props.id} 
         onClick={() => {
           console.log('Broker onClick called with props.id:', props.id);
