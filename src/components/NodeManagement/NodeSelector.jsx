@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-export const useNodeSelector = (nodes, setNodes, setCurrentObjects) => {
+export const useNodeSelector = (setNodes, setCurrentObjects) => {
   const selectNode = useCallback((nodeId) => {
     setNodes((nds) => {
       console.log('selectNode called with nodeId:', nodeId);
