@@ -1,14 +1,14 @@
 import { BrokerNode, TopicNode, ConsumerNode, ProducerNode, PartitionNode } from '../Nodes/index.js';
 
 export const NodeTypes = {
-  producer: props => {
+  Producer: props => {
     return (
       <ProducerNode 
         {...props} 
       />
     );
   },
-  consumer: props => (
+  Consumer: props => (
     <ConsumerNode 
       {...props} 
       onClick={() => {
@@ -18,7 +18,7 @@ export const NodeTypes = {
       }} 
     />
   ),
-  broker: props => (
+  Broker: props => (
     <BrokerNode 
       {...props} 
       isCurrentBroker={props.currentObjects?.broker === props.id} 
@@ -29,7 +29,7 @@ export const NodeTypes = {
       }}
     />
   ),  
-  topic: props => (
+  Topic: props => (
     <TopicNode 
       {...props} 
       selected={props.selected}
@@ -41,7 +41,7 @@ export const NodeTypes = {
       }} 
     />
   ),
-  partition: props => (
+  Partition: props => (
     <PartitionNode 
       {...props} 
       isCurrentPartition={props.currentObjects?.partition === props.id}

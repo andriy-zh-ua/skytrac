@@ -58,6 +58,22 @@ const App = () => {
     });
   };
 
+  const clearSelection = () => {
+    // Clear all node selections
+    setNodes((nds) => 
+      nds.map((node) => ({ ...node, selected: false }))
+    );
+    
+    // Clear current objects
+    setCurrentObjects({
+      producer: null,
+      topic: null,
+      consumer: null,
+      broker: null,
+      partition: null
+    });
+  };
+
 // Calculate position for new broker - offset to the right from the last broker
 const calculateBrokerPosition = (nodes) => {
   const brokerNodes = nodes.filter(n => n.type === 'broker');
@@ -219,6 +235,7 @@ const calculatePartitionPosition = (nodes, topicId) => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         selectNode={selectNode}
+        clearSelection={clearSelection}
         currentObjects={currentObjects}
       />
     </Box>
