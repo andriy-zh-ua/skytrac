@@ -2,6 +2,13 @@
 const TopicNode = props => {
   const { id, selected, isCurrentTopic, onClick } = props;
   const showBorder = selected || isCurrentTopic;
+  
+  const handleDuplicateTopic = (e) => {
+    e.stopPropagation(); // Prevent topic selection
+    alert(`Duplicate topic "${id}" as standalone topic (not attached to any broker)`);
+    // TODO: Implement topic duplication logic
+  };
+  
   return (
     <div
       data-type="topic"
@@ -46,6 +53,45 @@ const TopicNode = props => {
       }}>
         {id}
       </div>
+      
+      {/* Duplicate button */}
+      <button
+        onClick={handleDuplicateTopic}
+        disabled={!selected}
+        style={{
+          position: 'absolute',
+          top: '8px',
+          right: '8px',
+          width: '20px',
+          height: '20px',
+          borderRadius: '50%',
+          backgroundColor: selected ? '#388e3c' : '#cccccc',
+          color: 'white',
+          border: 'none',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          cursor: selected ? 'pointer' : 'not-allowed',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2,
+          transition: 'background-color 0.2s ease-in-out',
+          opacity: selected ? 1 : 0.5,
+        }}
+        onMouseEnter={(e) => {
+          if (selected) {
+            e.target.style.backgroundColor = '#2e7d32';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (selected) {
+            e.target.style.backgroundColor = '#388e3c';
+          }
+        }}
+        title={selected ? "Duplicate as standalone topic" : "Select topic to enable duplication"}
+      >
+        +
+      </button>
     </div>
   );
 };
