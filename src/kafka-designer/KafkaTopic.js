@@ -47,6 +47,13 @@ export class KafkaTopic {
     return Array.from(this.partitions.values());
   }
 
+  // addPartition(partition) {
+  //   this.partitions.set(partition.id, partition);
+  // }
+  assignPartition(partition) {
+    this.partitions.set(partition.id, partition);
+  }
+
   assignPartitionLeader(partitionId, brokerId) {
     const partition = this.partitions.get(partitionId);
     if (partition) {

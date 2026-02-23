@@ -4,6 +4,7 @@ import { KafkaBroker } from './KafkaBroker.js';
 import { KafkaTopic } from './KafkaTopic.js';
 import { KafkaProducer } from './KafkaProducer.js';
 import { KafkaConsumer } from './KafkaConsumer.js';
+import { KafkaPartition } from './KafkaPartition.js';
 
 export class KafkaCanvasIntegration {
   constructor() {
@@ -74,6 +75,42 @@ export class KafkaCanvasIntegration {
     };
   }
 
+  handleAddPartition(position, config = {}) {
+    // // Get the topic to add the partition to
+    // const topic = this.cluster.getTopic(config.topicId);
+    // if (!topic) {
+    //   throw new Error(`Topic ${config.topicId} not found`);
+    // }
+
+    // Set partition config
+    const partitionConfig = {
+      id: config.id || `partition-${Date.now()}`,
+      leader: config.leader || null,
+      replicas: config.replicas || [],
+      isr: config.isr || []
+    };
+
+    // Create a new partition
+    const newPartition = new KafkaPartition(partitionConfig);
+    // Add partition to cluster
+    this.cluster.addPartition(newPartition, config.brokerId, config.topicId);
+    // // Add partition to the topic
+    // topic.addPartition(newPartition);
+
+    // Store the position for this new partition
+    this.pendingPositions = this.pendingPositions || {};
+    this.pendingPositions[newPartition.id] = position || { x: 0, y: 0 };
+    
+    // Update canvas
+    this.updateCanvas();
+    
+    return {
+      partition: newPartition,
+      nodes: this.nodes,
+      edges: this.edges
+    };
+  }
+
   handleAddProducer(position, config = {}) {
     const producerConfig = {
       id: config.id || `producer-${Date.now()}`,
@@ -127,46 +164,6 @@ export class KafkaCanvasIntegration {
     
     return {
       consumer: newConsumer,
-      nodes: this.nodes,
-      edges: this.edges
-    };
-  }
-
-  handleAddPartition(position, config = {}) {
-    // Partitions are created as part of topics, so this method
-    // would typically be called when a topic is created or modified
-    // For now, we'll create a standalone partition for visualization
-    const partitionConfig = {
-      id: config.id || `partition-${Date.now()}`,
-      topic: config.topic || 'default-topic',
-      leader: config.leader || null,
-      replicas: config.replicas || [],
-      isr: config.isr || []
-    };
-
-    // Note: In a real Kafka cluster, partitions are managed by topics
-    // This is a simplified implementation for visualization purposes
-    const newPartition = {
-      ...partitionConfig,
-      offset: 0,
-      size: 0,
-      createdAt: new Date()
-    };
-
-    // Add to cluster (require brokerId for standalone partitions)
-    if (!config.brokerId) {
-      throw new Error('Standalone partition must be assigned to a broker');
-    }
-    this.cluster.addStandalonePartition(newPartition, config.brokerId);
-
-    // Store the position for this new partition
-    this.pendingPositions = this.pendingPositions || {};
-    this.pendingPositions[newPartition.id] = position || { x: 0, y: 0 };
-
-    this.updateCanvas();
-    
-    return {
-      partition: newPartition,
       nodes: this.nodes,
       edges: this.edges
     };

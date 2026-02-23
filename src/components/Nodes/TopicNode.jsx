@@ -11,7 +11,7 @@ const TopicNode = props => {
         background: 'white',
         color: '#333',
         border: showBorder ? '1px solid #388e3c' : 'none',
-        minWidth: '280px',
+        minWidth: '270px',
         minHeight: '200px',
         fontSize: '14px',
         textAlign: 'center',
@@ -41,7 +41,7 @@ const TopicNode = props => {
         transform: 'translateX(-50%)',
         fontSize: '10px',
         fontWeight: 'bold',
-        color: '#333',
+        color: showBorder ? '#388e3c' : '#333',
         zIndex: 1,
       }}>
         {id}

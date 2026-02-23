@@ -71,7 +71,23 @@ const calculateTopicPosition = (nodes, brokerId) => {
   const topicCount = brokerTopics.length;
   const baseY = 20; // Start 20px from top edge of broker
   const verticalSpacing = 230; // 200px height + 30px gap
-  return { x: 10, y: baseY + (topicCount * verticalSpacing) }; // Center horizontally: (300px broker - 280px topic) / 2 = 10px
+  return { 
+    x: 10, 
+    y: baseY + (topicCount * verticalSpacing) 
+  }; // Center horizontally: (300px broker - 280px topic) / 2 = 10px
+};
+
+const calculatePartitionPosition = (nodes, topicId) => {
+  const topicPartitions = nodes.filter(n => n.type === 'partition' && n.parentId === topicId);
+  const partitionCount = topicPartitions.length;
+  const baseX = 20; // Start 20px from left edge of topic
+  const baseY = 20; // Start 20px from top (account for label)
+  const verticalSpacing = 70; // 70px vertical spacing between partitions
+  
+  return { 
+    x: baseX, 
+    y: baseY + (partitionCount * verticalSpacing)
+  };
 };
 
 // Add a new node of the specified type
@@ -108,6 +124,7 @@ const calculateTopicPosition = (nodes, brokerId) => {
         name: `topic-${Date.now()}`,
         brokerId: currentObjects.broker
       });
+
       // Update React Flow nodes and edges from KafkaIntegration
       setNodes(kafkaResult.nodes);
       setEdges(kafkaResult.edges);
@@ -115,6 +132,32 @@ const calculateTopicPosition = (nodes, brokerId) => {
       // Select the newly added topic
       const newTopicId = kafkaResult.topic.name;
       selectNode(newTopicId);
+
+    } else if (type === 'partition') {
+      // Check if a topic is selected
+      if (!currentObjects.topic) {
+        alert('Please select a topic first to add partitions to');
+        return;
+      }
+      
+      // Calculate position for new partition within the selected topic
+      const position = calculatePartitionPosition(nodes, currentObjects.topic);
+      
+      // Add partition to Kafka Integration
+      kafkaResult = kafkaIntegration.handleAddPartition(position, {
+        id: `partition-${Date.now()}`,
+        topicId: currentObjects.topic,
+        brokerId: currentObjects.broker
+      });
+      
+      // Update React Flow nodes and edges from KafkaIntegration
+      setNodes(kafkaResult.nodes);
+      setEdges(kafkaResult.edges);
+      
+      // Select the newly added partition
+      const newPartitionId = kafkaResult.partition.id;
+      selectNode(newPartitionId);
+
     } else if (type === 'producer') {
       // const position = { x: 100, y: 100 };
       // kafkaResult = kafkaIntegration.handleAddProducer(position, {
@@ -129,20 +172,6 @@ const calculateTopicPosition = (nodes, brokerId) => {
       //   id: `consumer-${Date.now()}`,
       //   groupId: `group-${Date.now()}`,
       //   clientId: `consumer-client-${Date.now()}`
-      // });
-      // setNodes(kafkaResult.nodes);
-      // setEdges(kafkaResult.edges);
-    } else if (type === 'partition') {
-      // // Check if a broker is selected
-      // if (!currentObjects.broker) {
-      //   alert('Please select a broker first to assign the partition to');
-      //   return;
-      // }
-      
-      // const position = { x: 100, y: 100 };
-      // kafkaResult = kafkaIntegration.handleAddPartition(position, {
-      //   id: `partition-${Date.now()}`,
-      //   brokerId: currentObjects.broker
       // });
       // setNodes(kafkaResult.nodes);
       // setEdges(kafkaResult.edges);

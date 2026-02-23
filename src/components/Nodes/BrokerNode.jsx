@@ -39,7 +39,7 @@ const BrokerNode = props => {
         transform: 'translateX(-50%)',
         fontSize: '10px',
         fontWeight: 'bold',
-        color: '#333',
+        color: showBorder ? '#1976d2' : '#333',
         zIndex: 1,
       }}>
         {id}

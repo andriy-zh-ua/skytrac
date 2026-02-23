@@ -31,11 +31,7 @@ export class KafkaCluster {
   getBroker(brokerId) {
     return this.config.brokers.find(b => b.id === brokerId);
   }
-
-  getController() {
-    return this.config.brokers.find(b => b.isController);
-  }
-
+  
   // Topic management
   addTopic(topic, brokerId) {
     // Add topic to specific broker
@@ -44,7 +40,7 @@ export class KafkaCluster {
       throw new Error(`Broker ${brokerId} not found`);
     }
     
-    // Assign topic object to broker (topics are stored under brokers, not globally)
+    // Assign topic to broker
     broker.assignTopic(topic);
     
     // // Handle partition assignment
@@ -65,6 +61,24 @@ export class KafkaCluster {
       }
     }
     return null;
+  }
+
+  // Add partition to a specific topic
+  addPartition(partition, brokerId, topicId) {
+    // Get the specific broker
+    const broker = this.getBroker(brokerId);
+    if (!broker) {
+      throw new Error(`Broker ${brokerId} not found`);
+    }
+    
+    // Get the topic from that broker
+    const topic = broker.getTopic(topicId);
+    if (!topic) {
+      throw new Error(`Topic ${topicId} not found in broker ${brokerId}`);
+    }
+    
+    // Assign partition to topic
+    topic.assignPartition(partition);
   }
 
   // assignTopicToBrokers(topic) {
@@ -220,7 +234,6 @@ export class KafkaCluster {
       nodes.push({
         id: broker.id,
         type: 'broker',
-        // label: `Broker ${broker.id}`,
         data: broker.toJSON(),
         position: { x: 0, y: 0 } // Will be set by canvas
       });
@@ -236,12 +249,43 @@ export class KafkaCluster {
             parentId: broker.id,
             extent: 'parent',
             draggable: false,
-            // label: topic.name,
             data: topic.toJSON(),
             position: { x: 0, y: 0 } // Will be set by canvas
           });
         });
       }
+    });
+
+    // Partition nodes
+    // 1. Collect partitions from all topics
+    this.config.brokers.forEach(broker => {
+      broker.topics.forEach(topic => {
+        topic.partitions.forEach(partition => {
+          nodes.push({
+            id: partition.id,
+            type: 'partition',
+            parentId: topic.name,
+            extent: 'parent',
+            draggable: false,
+            data: partition,
+            position: { x: 0, y: 0 } // Will be set by canvas
+          });
+        });
+      });
+    });
+    // 2. Collect standalone partitions from brokers
+    this.config.brokers.forEach(broker => {
+      broker.getAllStandalonePartitions().forEach(partition => {
+        nodes.push({
+          id: partition.id,
+          type: 'partition',
+          parentId: broker.id,
+          extent: 'parent',
+          draggable: false,
+          data: partition,
+          position: { x: 0, y: 0 } // Will be set by canvas
+        });
+      });
     });
 
     // Producer nodes
