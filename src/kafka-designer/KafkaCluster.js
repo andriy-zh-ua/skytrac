@@ -235,6 +235,7 @@ export class KafkaCluster {
             type: 'topic',
             parentId: broker.id,
             extent: 'parent',
+            draggable: false,
             // label: topic.name,
             data: topic.toJSON(),
             position: { x: 0, y: 0 } // Will be set by canvas

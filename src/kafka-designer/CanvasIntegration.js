@@ -33,6 +33,11 @@ export class KafkaCanvasIntegration {
     const newBroker = new KafkaBroker(brokerConfig);
     // Add broker to cluster
     this.cluster.addBroker(newBroker);
+    
+    // Store the position for this new broker
+    this.pendingPositions = this.pendingPositions || {};
+    this.pendingPositions[newBroker.id] = position;
+    
     // Update canvas
     this.updateCanvas();
     
@@ -54,6 +59,11 @@ export class KafkaCanvasIntegration {
     const newTopic = new KafkaTopic(topicConfig);
     // Add topic to cluster
     this.cluster.addTopic(newTopic, config.brokerId);
+    
+    // Store the position for this new topic
+    this.pendingPositions = this.pendingPositions || {};
+    this.pendingPositions[newTopic.name] = position;
+    
     // Update canvas
     this.updateCanvas();
     
@@ -78,6 +88,11 @@ export class KafkaCanvasIntegration {
 
     const newProducer = new KafkaProducer(producerConfig);
     this.cluster.addProducer(newProducer);
+    
+    // Store the position for this new producer
+    this.pendingPositions = this.pendingPositions || {};
+    this.pendingPositions[newProducer.id] = position;
+    
     this.updateCanvas();
     
     return {
@@ -103,6 +118,11 @@ export class KafkaCanvasIntegration {
 
     const newConsumer = new KafkaConsumer(consumerConfig);
     this.cluster.addConsumer(newConsumer);
+    
+    // Store the position for this new consumer
+    this.pendingPositions = this.pendingPositions || {};
+    this.pendingPositions[newConsumer.id] = position;
+    
     this.updateCanvas();
     
     return {
@@ -139,13 +159,9 @@ export class KafkaCanvasIntegration {
     }
     this.cluster.addStandalonePartition(newPartition, config.brokerId);
 
-    // Add to visualization nodes
-    this.nodes.push({
-      id: newPartition.id,
-      type: 'partition',
-      label: `Partition ${newPartition.id}`,
-      position: position || { x: 0, y: 0 }
-    });
+    // Store the position for this new partition
+    this.pendingPositions = this.pendingPositions || {};
+    this.pendingPositions[newPartition.id] = position || { x: 0, y: 0 };
 
     this.updateCanvas();
     
@@ -224,12 +240,14 @@ export class KafkaCanvasIntegration {
     const clusterData = this.cluster.getCanvasNodes();
     const clusterEdges = this.cluster.getCanvasEdges();
     
-    // Merge with existing positions
+    // Merge with existing positions and pending positions
     this.nodes = clusterData.map(node => {
       const existing = this.nodes.find(n => n.id === node.id);
+      const pendingPosition = this.pendingPositions?.[node.id];
+      
       return {
         ...node,
-        position: existing?.position || node.position,
+        position: pendingPosition || existing?.position || node.position,
         data: {
           ...node.data,
           // Add event handlers for React Flow
@@ -237,6 +255,9 @@ export class KafkaCanvasIntegration {
         }
       };
     });
+    
+    // Clear pending positions after applying them
+    this.pendingPositions = {};
     
     this.edges = clusterEdges;
   }

@@ -8,21 +8,42 @@ const BrokerNode = props => {
       style={{
         padding: '10px 20px',
         borderRadius: '8px',
-        background: '#42a5f5',
-        color: 'white',
-        border: showBorder ? '3px solid #1976d2' : 'none',
-        width: '200px',
+        background: 'white',
+        color: '#333',
+        border: showBorder ? '1px solid #1976d2' : 'none',
+        width: '300px',
         height: '80vh',
         textAlign: 'center',
         fontWeight: 'bold',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
         cursor: 'pointer',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+        transition: 'box-shadow 0.2s ease-in-out',
+        position: 'relative',
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)';
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
       }}
       onClick={onClick}
     >
-      {id}
+      {/* Label at the very top */}
+      <div style={{
+        position: 'absolute',
+        top: '0px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        fontSize: '10px',
+        fontWeight: 'bold',
+        color: '#333',
+        zIndex: 1,
+      }}>
+        {id}
+      </div>
     </div>
   );
 };

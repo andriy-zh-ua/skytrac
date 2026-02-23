@@ -40,12 +40,6 @@ code {
   animation: dataFlow 2s linear infinite;
 }
 
-/* Selection marker for selected nodes */
-.react-flow__node.selected {
-  box-shadow: 0 0 0 3px #ff5722;
-  border-radius: 8px;
-}
-
 /* Keep brokers in background using order property */
 .react-flow__node[data-type="broker"] {
   order: -1 !important;

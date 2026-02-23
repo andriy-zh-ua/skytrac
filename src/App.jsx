@@ -58,18 +58,40 @@ const App = () => {
     });
   };
 
-  // Add a new node of the specified type
+// Calculate position for new broker - offset to the right from the last broker
+const calculateBrokerPosition = (nodes) => {
+  const brokerNodes = nodes.filter(n => n.type === 'broker');
+  const lastBrokerX = Math.max(...brokerNodes.map(n => n.position.x), 0);
+  return { x: lastBrokerX + 350, y: 100 }; // 350px offset to account for 300px width + 50px gap
+};
+
+// Calculate position for new topic - vertical offset from the last topic in the same broker
+const calculateTopicPosition = (nodes, brokerId) => {
+  const brokerTopics = nodes.filter(n => n.type === 'topic' && n.parentId === brokerId);
+  const topicCount = brokerTopics.length;
+  const baseY = 20; // Start 20px from top edge of broker
+  const verticalSpacing = 230; // 200px height + 30px gap
+  return { x: 10, y: baseY + (topicCount * verticalSpacing) }; // Center horizontally: (300px broker - 280px topic) / 2 = 10px
+};
+
+// Add a new node of the specified type
   const addNode = (type) => {
     // Use Kafka Integration for business logic
     let kafkaResult = null;
     if (type === 'broker') {
+      // Calculate position for new broker using standalone function
+      const position = calculateBrokerPosition(nodes);
+      
       // Add broker to Kafka Integration
-      const position = { x: 100, y: 100 };
       kafkaResult = kafkaIntegration.handleAddBroker(position);
 
       // Update React Flow nodes and edges from KafkaIntegration
       setNodes(kafkaResult.nodes);
       setEdges(kafkaResult.edges);
+      
+      // Select the newly added broker
+      const newBrokerId = kafkaResult.broker.id;
+      selectNode(newBrokerId);
 
     } else if (type === 'topic') {
       // Check if a broker is selected
@@ -78,8 +100,10 @@ const App = () => {
         return;
       }
       
+      // Calculate position for new topic using standalone function
+      const position = calculateTopicPosition(nodes, currentObjects.broker);
+      
       // Add topic to Kafka Integration
-      const position = { x: 100, y: 100 };
       kafkaResult = kafkaIntegration.handleAddTopic(position, {
         name: `topic-${Date.now()}`,
         brokerId: currentObjects.broker
@@ -87,6 +111,10 @@ const App = () => {
       // Update React Flow nodes and edges from KafkaIntegration
       setNodes(kafkaResult.nodes);
       setEdges(kafkaResult.edges);
+      
+      // Select the newly added topic
+      const newTopicId = kafkaResult.topic.name;
+      selectNode(newTopicId);
     } else if (type === 'producer') {
       // const position = { x: 100, y: 100 };
       // kafkaResult = kafkaIntegration.handleAddProducer(position, {
