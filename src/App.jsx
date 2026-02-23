@@ -36,7 +36,7 @@ const App = () => {
   );
 
   // Selection function - select one node, deselect others, and track current objects
-  const selectNode = (nodeId) => {
+  const selectNode = (nodeId, preserveBroker = false) => {
     setNodes((nds) => {
       const clickedNode = nds.find(n => n.id === nodeId);
       if (!clickedNode) {
@@ -44,14 +44,32 @@ const App = () => {
         return nds;
       }
       
-      // Update current objects for this category
-      setCurrentObjects(prev => ({
-        ...prev,
+      // Clear other category selections when selecting a different type
+      const newCurrentObjects = {
+        producer: null,
+        topic: null,
+        consumer: null,
+        broker: null,
+        partition: null,
         [clickedNode.type]: nodeId
-      }));
+      };
+      
+      // Auto-select parent broker when selecting a topic
+      let parentBrokerId = null;
+      if (clickedNode.type === 'topic' && clickedNode.parentId) {
+        parentBrokerId = clickedNode.parentId;
+        newCurrentObjects.broker = parentBrokerId;
+      // Preserve broker selection if explicitly requested and not selecting a broker
+      } else if (preserveBroker && clickedNode.type !== 'broker' && currentObjects.broker) {
+        newCurrentObjects.broker = currentObjects.broker;
+      }
+      
+      setCurrentObjects(newCurrentObjects);
       
       return nds.map((node) =>
-        node.id === nodeId
+        node.id === nodeId || 
+        node.id === parentBrokerId ||
+        (preserveBroker && node.id === currentObjects.broker)
           ? { ...node, selected: true }
           : { ...node, selected: false }
       );
@@ -145,9 +163,9 @@ const calculatePartitionPosition = (nodes, topicId) => {
       setNodes(kafkaResult.nodes);
       setEdges(kafkaResult.edges);
       
-      // Select the newly added topic
+      // Select the newly added topic but keep broker selected
       const newTopicId = kafkaResult.topic.name;
-      selectNode(newTopicId);
+      selectNode(newTopicId, true); // preserveBroker = true
 
     } else if (type === 'partition') {
       // Check if a topic is selected
