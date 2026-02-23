@@ -21,15 +21,19 @@ export class KafkaCanvasIntegration {
 
   // Event Handlers
   handleAddBroker(position) {
-    // Create a new broker
-    const newBroker = new KafkaBroker({
+    // Set broker config
+    const brokerConfig = {
       id: `broker-${Date.now()}`,
       host: 'localhost',
       port: 9092 + this.cluster.brokers.length,
       controller: this.cluster.brokers.length === 0
-    });
-
+    };
+    
+    // Create a new broker
+    const newBroker = new KafkaBroker(brokerConfig);
+    // Add broker to cluster
     this.cluster.addBroker(newBroker);
+    // Update canvas
     this.updateCanvas();
     
     return {
@@ -40,21 +44,17 @@ export class KafkaCanvasIntegration {
   }
 
   handleAddTopic(position, config = {}) {
-    // Check if a broker is provided
-    if (!config.brokerId) {
-      throw new Error('Topic must be assigned to a broker');
-    }
-
+    // Set topic config
     const topicConfig = {
       name: config.name || `topic-${Date.now()}`,
-      partitions: config.partitions || 0, // No default partitions
-      replicationFactor: config.replicationFactor || 1,
-      retentionMs: config.retentionMs || 604800000,
-      cleanupPolicy: config.cleanupPolicy || 'delete'
+      partitions: config.partitions || 0,
     };
 
+    // Create a new topic
     const newTopic = new KafkaTopic(topicConfig);
+    // Add topic to cluster
     this.cluster.addTopic(newTopic, config.brokerId);
+    // Update canvas
     this.updateCanvas();
     
     return {

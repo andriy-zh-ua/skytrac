@@ -1,6 +1,6 @@
 import { AppBar, Toolbar, Button, Typography, Box } from '@mui/material';
 
-const CustomAppBar = ({ onAddNode, hasBrokers, onExportSchema, kafkaStats }) => {
+const CustomAppBar = ({ onAddNode, hasBrokers, onExportSchema/*, kafkaStats */}) => {
   return (
     <AppBar position="static">
       <Toolbar>
@@ -35,7 +35,7 @@ const CustomAppBar = ({ onAddNode, hasBrokers, onExportSchema, kafkaStats }) => 
         </Button>
         
         {/* Kafka Stats Display */}
-        {kafkaStats && (
+        {/* {kafkaStats && (
           <Box sx={{ ml: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" sx={{ color: 'white' }}>
               🏢 {kafkaStats.brokerCount}
@@ -56,7 +56,7 @@ const CustomAppBar = ({ onAddNode, hasBrokers, onExportSchema, kafkaStats }) => 
               {kafkaStats.healthStatus ? '✅' : '❌'}
             </Typography>
           </Box>
-        )}
+        )} */}
       </Toolbar>
     </AppBar>
   );

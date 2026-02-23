@@ -3,7 +3,7 @@ import { KafkaPartition } from './KafkaPartition.js';
 export class KafkaTopic {
   constructor(config) {
     this.config = config;
-    this.partitions = new Map();
+    this.partitions = new Map(); // Store partition objects
     this.createdAt = new Date();
     this.initializePartitions();
   }

@@ -1,8 +1,8 @@
 export class KafkaBroker {
   constructor(config) {
     this.config = config;
-    this.topics = new Map(); // Store topic objects, not just names
-    this.standalonePartitions = new Map(); // partitionId -> partition object
+    this.topics = new Map(); // Store topic objects
+    this.standalonePartitions = new Map(); // Store partition objects without topic assignment
     this.isHealthy = true;
   }
 

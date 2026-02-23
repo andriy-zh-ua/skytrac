@@ -220,21 +220,27 @@ export class KafkaCluster {
       nodes.push({
         id: broker.id,
         type: 'broker',
-        label: `Broker ${broker.id}`,
+        // label: `Broker ${broker.id}`,
         data: broker.toJSON(),
         position: { x: 0, y: 0 } // Will be set by canvas
       });
     });
 
-    // Topic nodes
-    this.config.topics.forEach(topic => {
-      nodes.push({
-        id: topic.name,
-        type: 'topic',
-        label: topic.name,
-        data: topic.toJSON(),
-        position: { x: 0, y: 0 } // Will be set by canvas
-      });
+    // Topic nodes - collect from all brokers
+    this.config.brokers.forEach(broker => {
+      if (broker.topics) {
+        broker.topics.forEach(topic => {
+          nodes.push({
+            id: topic.name,
+            type: 'topic',
+            parentId: broker.id,
+            extent: 'parent',
+            // label: topic.name,
+            data: topic.toJSON(),
+            position: { x: 0, y: 0 } // Will be set by canvas
+          });
+        });
+      }
     });
 
     // Producer nodes
