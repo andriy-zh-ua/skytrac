@@ -56,11 +56,26 @@ const App = () => {
       
       // Auto-select parent broker when selecting a topic
       let parentBrokerId = null;
+      let parentTopicId = null;
+      
       if (clickedNode.type === 'topic' && clickedNode.parentId) {
         parentBrokerId = clickedNode.parentId;
         newCurrentObjects.broker = parentBrokerId;
+      }
+      // Auto-select parent topic and broker when selecting a partition
+      else if (clickedNode.type === 'partition' && clickedNode.parentId) {
+        parentTopicId = clickedNode.parentId;
+        newCurrentObjects.topic = parentTopicId;
+        
+        // Find the parent topic node to get its broker
+        const parentTopicNode = nds.find(n => n.id === parentTopicId);
+        if (parentTopicNode && parentTopicNode.parentId) {
+          parentBrokerId = parentTopicNode.parentId;
+          newCurrentObjects.broker = parentBrokerId;
+        }
+      }
       // Preserve broker selection if explicitly requested and not selecting a broker
-      } else if (preserveBroker && clickedNode.type !== 'broker' && currentObjects.broker) {
+      else if (preserveBroker && clickedNode.type !== 'broker' && currentObjects.broker) {
         newCurrentObjects.broker = currentObjects.broker;
       }
       
@@ -69,6 +84,7 @@ const App = () => {
       return nds.map((node) =>
         node.id === nodeId || 
         node.id === parentBrokerId ||
+        node.id === parentTopicId ||
         (preserveBroker && node.id === currentObjects.broker)
           ? { ...node, selected: true }
           : { ...node, selected: false }
