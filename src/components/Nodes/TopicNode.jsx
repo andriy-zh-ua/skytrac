@@ -1,12 +1,13 @@
 // Node to represent a Kafka topic
 const TopicNode = props => {
-  const { id, selected, isCurrentTopic, onClick } = props;
+  const { id, selected, isCurrentTopic, onClick, onDuplicateTopic } = props;
   const showBorder = selected || isCurrentTopic;
   
-  const handleDuplicateTopic = (e) => {
+  const handleDuplicateTopic = e => {
     e.stopPropagation(); // Prevent topic selection
-    alert(`Duplicate topic "${id}" as standalone topic (not attached to any broker)`);
-    // TODO: Implement topic duplication logic
+    if (onDuplicateTopic) {
+      onDuplicateTopic(id);
+    }
   };
   
   return (

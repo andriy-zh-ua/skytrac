@@ -53,7 +53,7 @@ export class KafkaCanvasIntegration {
     // Set topic config
     const topicConfig = {
       name: config.name || `topic-${Date.now()}`,
-      partitions: config.partitions || 0,
+      partitions: config.partitions || []
     };
 
     // Create a new topic
@@ -67,6 +67,40 @@ export class KafkaCanvasIntegration {
     
     // Update canvas
     this.updateCanvas();
+    
+    return {
+      topic: newTopic,
+      nodes: this.nodes,
+      edges: this.edges
+    };
+  }
+
+  handleAddStandaloneTopic(position, config = {}) {
+    // Create a new topic
+    const topicConfig = {
+      name: config.name || `standalone-topic-${Date.now()}`,
+      // replicationFactor: config.replicationFactor || 1,
+      partitions: config.partitions || []
+    };
+
+    const newTopic = new KafkaTopic(topicConfig);
+    
+    // Don't add to cluster for now - just create the topic object
+    // this.cluster.addStandaloneTopic(newTopic);
+
+    // Store the position for this new standalone topic
+    this.pendingPositions = this.pendingPositions || {};
+    this.pendingPositions[newTopic.name] = position;
+    
+    // Add topic directly to nodes without going through cluster
+    const topicNode = {
+      id: newTopic.name,
+      type: 'topic',
+      data: newTopic.toJSON(),
+      position: position
+    };
+    
+    this.nodes.push(topicNode);
     
     return {
       topic: newTopic,

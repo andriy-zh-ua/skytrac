@@ -108,6 +108,66 @@ const App = () => {
     });
   };
 
+  const handleDuplicateTopic = (topicId) => {
+    // Find the topic node to get its position
+    const topicNode = nodes.find(n => n.id === topicId);
+    if (!topicNode) {
+      console.error('Topic not found for duplication');
+      return;
+    }
+
+    // Calculate position for the duplicated topic (diagonal bottom-right offset)
+    // Since duplicated topic is standalone, we need absolute canvas position
+    const offset = 20; // Moderate offset for clear separation
+    
+    // Get the original topic node
+    const originalTopicNode = nodes.find(n => n.id === topicId);
+    
+    // Calculate absolute position of the original topic
+    let absoluteTopicPosition;
+    if (originalTopicNode.parentId) {
+      // Topic is attached to a broker - find broker position
+      const brokerNode = nodes.find(n => n.id === originalTopicNode.parentId);
+      if (brokerNode) {
+        absoluteTopicPosition = {
+          x: brokerNode.position.x + originalTopicNode.position.x,
+          y: brokerNode.position.y + originalTopicNode.position.y
+        };
+      } else {
+        // Fallback if broker not found
+        absoluteTopicPosition = originalTopicNode.position;
+      }
+    } else {
+      // Topic is already standalone - use its position directly
+      absoluteTopicPosition = originalTopicNode.position;
+    }
+    
+    // Calculate position for duplicate with offset
+    const newPosition = {
+      x: absoluteTopicPosition.x + offset,
+      y: absoluteTopicPosition.y + offset
+    };
+
+    // Create duplicate topic configuration
+    const duplicateConfig = {
+      name: `${topicId}-duplicate-${Date.now()}`,
+      // Copy other properties from original topic if needed
+      replicationFactor: topicNode.data?.replicationFactor || 1,
+      partitions: topicNode.data?.partitions || []
+    };
+
+    // Use Kafka Integration to create standalone topic
+    const kafkaResult = kafkaIntegration.handleAddStandaloneTopic(newPosition, duplicateConfig);
+    
+    // Update React Flow nodes and edges
+    setNodes(kafkaResult.nodes);
+    setEdges(kafkaResult.edges);
+    
+    // Select the newly created duplicated topic
+    const newTopicId = kafkaResult.topic.name;
+    selectNode(newTopicId);
+  };
+
 // Calculate position for new broker - offset to the right from the last broker
 const calculateBrokerPosition = (nodes) => {
   const brokerNodes = nodes.filter(n => n.type === 'broker');
@@ -270,6 +330,7 @@ const calculatePartitionPosition = (nodes, topicId) => {
         onConnect={onConnect}
         selectNode={selectNode}
         clearSelection={clearSelection}
+        onDuplicateTopic={handleDuplicateTopic}
         currentObjects={currentObjects}
       />
     </Box>

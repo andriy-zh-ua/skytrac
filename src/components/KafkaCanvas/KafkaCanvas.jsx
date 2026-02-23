@@ -11,6 +11,7 @@ export const KafkaCanvas = ({
   onConnect,
   selectNode,
   clearSelection,
+  onDuplicateTopic,
   currentObjects
 }) => {
   // Handle canvas click to deselect all nodes
@@ -45,6 +46,7 @@ export const KafkaCanvas = ({
         {...props} 
         selectNode={selectNode}
         currentObjects={currentObjects}
+        onDuplicateTopic={onDuplicateTopic}
       />
     ),
     consumer: props => (

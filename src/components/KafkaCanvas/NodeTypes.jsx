@@ -39,6 +39,7 @@ export const NodeTypes = {
           props.selectNode(props.id);
         }
       }} 
+      onDuplicateTopic={props.onDuplicateTopic}
     />
   ),
   Partition: props => (
