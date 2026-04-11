@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 import { Box } from '@mui/material';
+import { ReactFlowProvider } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
 import { useNodesState, useEdgesState, addEdge } from '@xyflow/react';
@@ -11,6 +12,9 @@ import CustomAppBar from './components/AppBar.jsx';
 
 // Import Kafka Canvas Integration
 import { KafkaCanvasIntegration } from './kafka-designer/CanvasIntegration.js';
+
+// Import animation configuration
+import { ANIMATION_CONFIG } from './config/animationConfig.js';
 
 const App = () => {
   // Kafka Canvas Integration
@@ -29,11 +33,53 @@ const App = () => {
     partition: null,
   });
 
+  // Animation speed from config (in milliseconds)
+  const animationSpeed = ANIMATION_CONFIG.producerEdgeAnimationSpeed;
+
+  // Set CSS custom property for animation speed
+  useEffect(() => {
+    document.documentElement.style.setProperty('--producer-animation-speed', `${animationSpeed}ms`);
+  }, [animationSpeed]);
+
   // Handle new connections between nodes
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
+    (params) => setEdges((eds) => addEdge({
+      ...params,
+      style: { 
+        stroke: '#b1b1b7',
+        strokeWidth: 2,
+      },
+      markerEnd: {
+        type: 'arrowclosed',
+        color: '#b1b1b7',
+      }
+    }, eds)),
     [setEdges]
   );
+
+  // Update edge styles based on producer state
+  const updateEdgeStyles = useCallback((producerId, isActive) => {
+    setEdges((eds) => eds.map(edge => {
+      if (edge.source === producerId) {
+        return {
+          ...edge,
+          style: isActive ? {
+            stroke: '#4caf50',
+            strokeWidth: 3,
+          } : {
+            stroke: '#b1b1b7',
+            strokeWidth: 2,
+          },
+          markerEnd: {
+            type: 'arrowclosed',
+            color: isActive ? '#4caf50' : '#b1b1b7',
+          },
+          className: isActive ? 'running-producer' : undefined
+        };
+      }
+      return edge;
+    }));
+  }, [setEdges]);
 
   // Selection function - select one node, deselect others, and track current objects
   const selectNode = (nodeId, preserveBroker = false) => {
@@ -200,6 +246,34 @@ const calculatePartitionPosition = (nodes, topicId) => {
   };
 };
 
+// Calculate position for new producer - place on the left side of the canvas
+const calculateProducerPosition = (nodes) => {
+  const producerNodes = nodes.filter(n => n.type === 'producer');
+  const producerCount = producerNodes.length;
+  const baseX = 50; // Start 50px from left edge
+  const baseY = 100; // Start 100px from top
+  const verticalSpacing = 150; // 150px vertical spacing between producers
+  
+  return { 
+    x: baseX, 
+    y: baseY + (producerCount * verticalSpacing)
+  };
+};
+
+// Calculate position for new consumer - place on the right side of the canvas
+const calculateConsumerPosition = (nodes) => {
+  const consumerNodes = nodes.filter(n => n.type === 'consumer');
+  const consumerCount = consumerNodes.length;
+  const baseX = 1200; // Start 1200px from left edge (right side)
+  const baseY = 100; // Start 100px from top
+  const verticalSpacing = 150; // 150px vertical spacing between consumers
+  
+  return { 
+    x: baseX, 
+    y: baseY + (consumerCount * verticalSpacing)
+  };
+};
+
 // Add a new node of the specified type
   const addNode = (type) => {
     // Use Kafka Integration for business logic
@@ -269,22 +343,40 @@ const calculatePartitionPosition = (nodes, topicId) => {
       selectNode(newPartitionId);
 
     } else if (type === 'producer') {
-      // const position = { x: 100, y: 100 };
-      // kafkaResult = kafkaIntegration.handleAddProducer(position, {
-      //   id: `producer-${Date.now()}`,
-      //   clientId: `producer-client-${Date.now()}`
-      // });
-      // setNodes(kafkaResult.nodes);
-      // setEdges(kafkaResult.edges);
+      // Calculate position for new producer
+      const position = calculateProducerPosition(nodes);
+      
+      // Add producer to Kafka Integration
+      kafkaResult = kafkaIntegration.handleAddProducer(position, {
+        id: `producer-${Date.now()}`,
+        clientId: `producer-client-${Date.now()}`
+      });
+      
+      // Update React Flow nodes and edges from KafkaIntegration
+      setNodes(kafkaResult.nodes);
+      setEdges(kafkaResult.edges);
+      
+      // Select the newly added producer
+      const newProducerId = kafkaResult.producer.id;
+      selectNode(newProducerId);
     } else if (type === 'consumer') {
-      // const position = { x: 100, y: 100 };
-      // kafkaResult = kafkaIntegration.handleAddConsumer(position, {
-      //   id: `consumer-${Date.now()}`,
-      //   groupId: `group-${Date.now()}`,
-      //   clientId: `consumer-client-${Date.now()}`
-      // });
-      // setNodes(kafkaResult.nodes);
-      // setEdges(kafkaResult.edges);
+      // Calculate position for new consumer
+      const position = calculateConsumerPosition(nodes);
+      
+      // Add consumer to Kafka Integration
+      kafkaResult = kafkaIntegration.handleAddConsumer(position, {
+        id: `consumer-${Date.now()}`,
+        groupId: `group-${Date.now()}`,
+        clientId: `consumer-client-${Date.now()}`
+      });
+      
+      // Update React Flow nodes and edges from KafkaIntegration
+      setNodes(kafkaResult.nodes);
+      setEdges(kafkaResult.edges);
+      
+      // Select the newly added consumer
+      const newConsumerId = kafkaResult.consumer.id;
+      selectNode(newConsumerId);
     }
   };
 
@@ -315,25 +407,29 @@ const calculatePartitionPosition = (nodes, topicId) => {
   };
 
   return (
-    <Box sx={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <CustomAppBar 
-        onAddNode={addNode}
-        hasBrokers={nodes.filter(node => node.type === 'broker').length > 0}
-        onExportSchema={exportSchema}
-      />
-      {/* React Flow Canvas */}
-      <KafkaCanvas
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        selectNode={selectNode}
-        clearSelection={clearSelection}
-        onDuplicateTopic={handleDuplicateTopic}
-        currentObjects={currentObjects}
-      />
-    </Box>
+    <ReactFlowProvider>
+      <Box sx={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <CustomAppBar 
+          onAddNode={addNode}
+          hasBrokers={nodes.filter(node => node.type === 'broker').length > 0}
+          onExportSchema={exportSchema}
+        />
+        {/* React Flow Canvas */}
+        <KafkaCanvas
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          selectNode={selectNode}
+          clearSelection={clearSelection}
+          onDuplicateTopic={handleDuplicateTopic}
+          currentObjects={currentObjects}
+          kafkaIntegration={kafkaIntegration}
+          updateEdgeStyles={updateEdgeStyles}
+        />
+      </Box>
+    </ReactFlowProvider>
   );
 };
 
