@@ -43,18 +43,34 @@ const App = () => {
 
   // Handle new connections between nodes
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge({
-      ...params,
-      style: { 
-        stroke: '#b1b1b7',
-        strokeWidth: 2,
-      },
-      markerEnd: {
-        type: 'arrowclosed',
-        color: '#b1b1b7',
+    (params) => {
+      // Add the new edge
+      const newEdges = addEdge({
+        ...params,
+        style: { 
+          stroke: '#b1b1b7',
+          strokeWidth: 2,
+        },
+        markerEnd: {
+          type: 'arrowclosed',
+          color: '#b1b1b7',
+        }
+      }, edges);
+      
+      // Automatically select the producer if this is a producer connection
+      const producerNode = nodes.find(node => node.id === params.source && node.type === 'producer');
+      if (producerNode && !producerNode.selected) {
+        // Update nodes to select the producer and deselect others
+        setNodes((nds) => nds.map(node => 
+          node.id === params.source 
+            ? { ...node, selected: true }
+            : { ...node, selected: false } // Deselect all others
+        ));
       }
-    }, eds)),
-    [setEdges]
+      
+      setEdges(newEdges);
+    },
+    [setEdges, setNodes, nodes]
   );
 
   // Update edge styles based on producer state
