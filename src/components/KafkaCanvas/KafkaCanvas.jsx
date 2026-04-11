@@ -25,14 +25,13 @@ export const KafkaCanvas = ({
     return edges.some(edge => edge.source === producerId);
   }, [edges]);
 
-  // Toggle producer active state
-  const toggleProducerActive = useCallback((producerId) => {
+  // Activate producer
+  const activateProducer = useCallback((producerId) => {
     const producerNode = nodes.find(node => node.id === producerId);
     if (producerNode) {
-      const isActive = !producerNode.data.active;
       const updatedData = {
         ...producerNode.data,
-        active: isActive
+        active: true
       };
       
       const updatedNode = {
@@ -49,7 +48,35 @@ export const KafkaCanvas = ({
       
       // Update edge styles based on producer state
       if (updateEdgeStyles) {
-        updateEdgeStyles(producerId, isActive);
+        updateEdgeStyles(producerId, true);
+      }
+    }
+  }, [nodes, onNodesChange, updateEdgeStyles]);
+
+  // Deactivate producer
+  const deactivateProducer = useCallback((producerId) => {
+    const producerNode = nodes.find(node => node.id === producerId);
+    if (producerNode) {
+      const updatedData = {
+        ...producerNode.data,
+        active: false
+      };
+      
+      const updatedNode = {
+        ...producerNode,
+        data: updatedData
+      };
+      
+      // Update node state
+      onNodesChange([{
+        id: producerId,
+        type: 'replace',
+        item: updatedNode
+      }]);
+      
+      // Update edge styles based on producer state
+      if (updateEdgeStyles) {
+        updateEdgeStyles(producerId, false);
       }
     }
   }, [nodes, onNodesChange, updateEdgeStyles]);
@@ -251,7 +278,8 @@ export const KafkaCanvas = ({
         selectNode={selectNode}
         currentObjects={currentObjects}
         hasConnections={hasProducerConnections(props.id)}
-        toggleProducerActive={toggleProducerActive}
+        activateProducer={activateProducer}
+        deactivateProducer={deactivateProducer}
       />
     ),
     topic: props => (
@@ -276,7 +304,7 @@ export const KafkaCanvas = ({
         currentObjects={currentObjects}
       />
     ),
-  }), [selectNode, currentObjects, hasProducerConnections, toggleProducerActive, onDuplicateTopic])();
+  }), [selectNode, currentObjects, hasProducerConnections, activateProducer, deactivateProducer, onDuplicateTopic])();
   return (
     <Box sx={{ flexGrow: 1 }}>
       <ReactFlow
