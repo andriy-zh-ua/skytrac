@@ -354,7 +354,14 @@ const calculateConsumerPosition = (nodes) => {
       
       // Update React Flow nodes and edges from KafkaIntegration
       setNodes(kafkaResult.nodes);
-      setEdges(kafkaResult.edges);
+      // Preserve existing manual edges while adding new ones from KafkaIntegration
+      setEdges((currentEdges) => {
+        const existingEdgeIds = new Set(currentEdges.map(e => `${e.source}-${e.target}`));
+        const newEdges = kafkaResult.edges.filter(e => 
+          !existingEdgeIds.has(`${e.source}-${e.target}`)
+        );
+        return [...currentEdges, ...newEdges];
+      });
       
       // Select the newly added producer
       const newProducerId = kafkaResult.producer.id;
@@ -372,7 +379,14 @@ const calculateConsumerPosition = (nodes) => {
       
       // Update React Flow nodes and edges from KafkaIntegration
       setNodes(kafkaResult.nodes);
-      setEdges(kafkaResult.edges);
+      // Preserve existing manual edges while adding new ones from KafkaIntegration
+      setEdges((currentEdges) => {
+        const existingEdgeIds = new Set(currentEdges.map(e => `${e.source}-${e.target}`));
+        const newEdges = kafkaResult.edges.filter(e => 
+          !existingEdgeIds.has(`${e.source}-${e.target}`)
+        );
+        return [...currentEdges, ...newEdges];
+      });
       
       // Select the newly added consumer
       const newConsumerId = kafkaResult.consumer.id;

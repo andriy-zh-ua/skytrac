@@ -290,7 +290,13 @@ export class KafkaCanvasIntegration {
     // Clear pending positions after applying them
     this.pendingPositions = {};
     
-    this.edges = clusterEdges;
+    // Preserve existing manual edges while adding cluster-generated edges
+    const existingEdgeIds = new Set(this.edges.map(e => `${e.source}-${e.target}`));
+    const newClusterEdges = clusterEdges.filter(e => 
+      !existingEdgeIds.has(`${e.source}-${e.target}`)
+    );
+    
+    this.edges = [...this.edges, ...newClusterEdges];
   }
 
   // Get current state
