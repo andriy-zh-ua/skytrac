@@ -24,6 +24,28 @@ code {
   }
 }
 
+/* Moving dashed animation for running producer edges */
+@keyframes movingDash {
+  0% {
+    stroke-dasharray: 10 10;
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dasharray: 10 10;
+    stroke-dashoffset: -20;
+  }
+}
+
+/* Running producer edge with moving dashed effect */
+.react-flow__edge.running-producer path {
+  stroke: #4caf50;
+  stroke-width: 3;
+  stroke-dasharray: 10 10;
+  stroke-linecap: round;
+  animation: movingDash var(--producer-animation-speed) linear infinite;
+}
+
+
 /* Solid line underneath */
 .react-flow__edge.solid-line path {
   stroke: #b0bec5;
@@ -53,5 +75,10 @@ code {
 /* Alternative: Use transform to push brokers back */
 .react-flow__node[data-type="broker"] {
   transform: translateZ(-1px) !important;
+}
+
+.react-flow__node.highlight {
+  background-color: #db7719;
+  /* color: white; */
 }
 
