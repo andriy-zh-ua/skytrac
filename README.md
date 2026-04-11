@@ -1,5 +1,13 @@
 # Skytrac Kafka UI
 
+## Application Overview
+
+### Kafka Architecture Builder Interface
+
+![Skytrac Kafka UI Interface](screenshots/kafka-ui-interface.png)
+
+The Skytrac Kafka UI provides an intuitive interface for designing and managing Kafka architectures with visual node-based editing, real-time connection management, and animated data flow visualization.
+
 ## Commands
 
 ### Install Dependencies
