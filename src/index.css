@@ -77,8 +77,4 @@ code {
   transform: translateZ(-1px) !important;
 }
 
-.react-flow__node.highlight {
-  background-color: #db7719;
-  /* color: white; */
-}
 
