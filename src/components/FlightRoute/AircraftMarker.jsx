@@ -1,7 +1,7 @@
 import { Marker } from 'react-leaflet';
 import L from 'leaflet';
 
-const AircraftMarker = ({ position, onDragEnd, rotation = 0, selected = false, onClick }) => {
+const AircraftMarker = ({ position, onDragEnd, onDragStart, rotation = 0, selected = false, onClick }) => {
   if (!position) return null;
   
   // Red for selected, gray for unselected
@@ -21,6 +21,7 @@ const AircraftMarker = ({ position, onDragEnd, rotation = 0, selected = false, o
       icon={rotatedIcon}
       draggable={true}
       eventHandlers={{ 
+        dragstart: onDragStart,
         dragend: onDragEnd,
         click: onClick
        }}

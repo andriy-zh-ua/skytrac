@@ -123,6 +123,10 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     );
   }, []);
 
+  // Handle aircraft drag start
+  const handleAircraftDragStart = useCallback((e, aircraftId) => {
+  }, []);
+
   // Handle aircraft click to select aircraft
   const handleAircraftClick = useCallback((aircraftId) => {
     setSelectedAircraftId(aircraftId);
@@ -467,6 +471,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
           <AircraftMarker 
             key={ac.id}
             position={ac.startPoint}
+            onDragStart={(e) => handleAircraftDragStart(e, ac.id)}
             onDragEnd={(e) => handleAircraftDragEnd(e, ac.id)}
             rotation={ac.aircraftRotation}
             selected={ac.id === selectedAircraftId}
