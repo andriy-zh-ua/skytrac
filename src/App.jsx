@@ -18,14 +18,7 @@ import { KafkaCanvasIntegration } from './kafka-designer/CanvasIntegration.js';
 import { ANIMATION_CONFIG } from './config/animationConfig.js';
 
 const App = () => {
-  // Flight route state
-  const [flightRoute, setFlightRoute] = useState({
-    start: null,
-    destination: null,
-    fullRoute: [],
-    stepCoordinates: []
-  });
-
+  
   // Kafka Canvas Integration
   const [kafkaIntegration] = useState(() => new KafkaCanvasIntegration());
 
@@ -52,7 +45,6 @@ const App = () => {
 
   // Handle flight route updates
   const handleRouteUpdate = useCallback((routeData) => {
-    setFlightRoute(routeData);
     console.log('Flight route updated:', routeData);
   }, []);
 

@@ -4,8 +4,9 @@ import { Box, Paper, Typography, Switch, FormControlLabel, Slider, Button, Linea
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import FlightRouteKafkaProducer from './FlightRouteKafkaProducer';
+import AircraftMarker from './AircraftMarker';
 
-// Fix for default markers in webpack
+// Fix for default markers in webpack - ensure clean state
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -14,7 +15,7 @@ L.Icon.Default.mergeOptions({
 });
 
 const AIRCRAFT_ICON = L.divIcon({
-  className: 'aircraft-icon',
+  className: 'aircraft-marker',
   html: ' Aircraft ',
   iconSize: [60, 20],
   iconAnchor: [30, 10],
@@ -185,10 +186,16 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
     });
   }, [startPoint, destinationPoint, useOSRM, stepDistance, getOSRMRoute, getStraightLineRoute, resampleRoute, onRouteUpdate]);
 
-  // Handle map click for destination
+  // Handle map click for destination or aircraft placement
   const handleMapClick = useCallback((latlng) => {
-    setDestinationPoint(latlng);
-  }, []);
+    if (!startPoint) {
+      // If no aircraft exists, place it
+      setStartPoint(latlng);
+    } else {
+      // If aircraft exists, set destination
+      setDestinationPoint(latlng);
+    }
+  }, [startPoint]);
 
   // Handle aircraft drag end
   const handleAircraftDragEnd = useCallback((e) => {
@@ -204,10 +211,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
     }
   }, [startPoint, destinationPoint, generateRoute]);
 
-  // Initialize start point
-  useEffect(() => {
-    setStartPoint(L.latLng(initialCenter[0], initialCenter[1]));
-  }, [initialCenter]);
+  // Map starts empty - user will place aircraft manually
 
   // Get simulation state
   const getSimulationState = useCallback(() => ({
@@ -238,18 +242,18 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         <MapClickHandler onMapClick={handleMapClick} />
 
         {/* Aircraft (draggable start point) */}
-        {startPoint && (
-          <Marker
-            position={startPoint}
-            icon={AIRCRAFT_ICON}
-            draggable={true}
-            eventHandlers={{ dragend: handleAircraftDragEnd }}
-          />
-        )}
+        <AircraftMarker 
+          position={startPoint}
+          onDragEnd={handleAircraftDragEnd}
+        />
 
         {/* Destination marker */}
         {destinationPoint && (
-          <Marker position={destinationPoint} icon={DEST_ICON} />
+          <Marker
+            key="destination-marker"
+            position={destinationPoint}
+            icon={DEST_ICON}
+          />
         )}
 
         {/* Route polyline */}
@@ -281,9 +285,10 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         
         <Typography variant="body2" gutterBottom>
           <strong>Instructions:</strong><br />
-          1. Drag the Aircraft marker to set start<br />
-          2. Click anywhere to set destination<br />
-          3. Route generates automatically
+          1. Click anywhere to place aircraft<br />
+          2. Click again to set destination<br />
+          3. Route generates automatically<br />
+          4. Drag aircraft to adjust start point
         </Typography>
 
         <FormControlLabel

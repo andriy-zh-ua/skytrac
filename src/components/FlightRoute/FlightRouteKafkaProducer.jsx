@@ -5,9 +5,7 @@ const FlightRouteKafkaProducer = ({ routeData, kafkaIntegration }) => {
   const [streamingInterval, setStreamingInterval] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
 
-  // Kafka topic for flight route data
-  const FLIGHT_TOPIC = 'flight-routes';
-
+  
   // Start streaming flight position data to Kafka
   const startStreaming = useCallback(() => {
     if (!routeData || !routeData.stepCoordinates || routeData.stepCoordinates.length === 0) {
