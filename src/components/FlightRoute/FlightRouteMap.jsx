@@ -54,6 +54,24 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
   const [stepCoordinates, setStepCoordinates] = useState([]);
   const [useOSRM, setUseOSRM] = useState(true);
   const [stepDistance, setStepDistance] = useState(200); // meters
+  const [aircraftRotation, setAircraftRotation] = useState(0); // degrees
+
+  // Calculate bearing between two points
+  const calculateBearing = useCallback((startLat, startLon, endLat, endLon) => {
+    const startLatRad = (startLat * Math.PI) / 180;
+    const startLonRad = (startLon * Math.PI) / 180;
+    const endLatRad = (endLat * Math.PI) / 180;
+    const endLonRad = (endLon * Math.PI) / 180;
+
+    const dLon = endLonRad - startLonRad;
+
+    const y = Math.sin(dLon) * Math.cos(endLatRad);
+    const x = Math.cos(startLatRad) * Math.sin(endLatRad) - 
+              Math.sin(startLatRad) * Math.cos(endLatRad) * Math.cos(dLon);
+
+    const bearing = Math.atan2(y, x) * (180 / Math.PI);
+    return (bearing + 360) % 360;
+  }, []);
 
   // Route data for Kafka streaming
   const routeData = {
@@ -208,6 +226,19 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
     }
   }, [startPoint, destinationPoint, generateRoute]);
 
+  // Update aircraft rotation when destination is set
+  useEffect(() => {
+    if (startPoint && destinationPoint) {
+      const bearing = calculateBearing(
+        startPoint.lat, 
+        startPoint.lng, 
+        destinationPoint.lat, 
+        destinationPoint.lng
+      );
+      setAircraftRotation(bearing);
+    }
+  }, [startPoint, destinationPoint, calculateBearing]);
+
   // Auto-place aircraft when producer is created in Kafka schema
   useEffect(() => {
     if (producers && producers.length > 0 && !startPoint) {
@@ -250,6 +281,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         <AircraftMarker 
           position={startPoint}
           onDragEnd={handleAircraftDragEnd}
+          rotation={aircraftRotation}
         />
 
         {/* Destination marker */}
