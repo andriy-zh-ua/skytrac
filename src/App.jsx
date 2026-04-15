@@ -462,7 +462,6 @@ const calculateConsumerPosition = (nodes) => {
         cluster: kafkaIntegration.cluster.toJSON()
       };
       console.log('Kafka Schema:', JSON.stringify(schema, null, 2));
-      // alert('Schema exported to console! Press F12 to view.');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       alert(`Export failed: ${errorMessage}`);
