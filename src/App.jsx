@@ -168,7 +168,7 @@ const App = () => {
         newCurrentObjects.broker = currentObjects.broker;
       }
       
-    setCurrentObjects(newCurrentObjects);
+      setCurrentObjects(newCurrentObjects);
       
       return nds.map((node) =>
         node.id === nodeId || 
