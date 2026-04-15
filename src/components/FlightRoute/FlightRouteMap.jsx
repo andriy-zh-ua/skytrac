@@ -71,6 +71,25 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     }
   }, [producers]);
 
+  // Auto-select and place aircraft when producers change
+  useEffect(() => {
+    if (producers && producers.length > 0) {
+      const newAircraftList = producers.map(producer => ({
+        id: producer.id,
+        startPoint: L.latLng(OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON),
+        destinationPoint: null,
+        stepCoordinates: [],
+        aircraftRotation: 0
+      }));
+
+      setAircraft(newAircraftList);
+
+      if (newAircraftList.length > 0) {
+        setSelectedAircraftId(newAircraftList[newAircraftList.length - 1].id);
+      }
+    }
+  }, [producers]);
+
   // Calculate responsive stroke width based on zoom level
   const getStrokeWidth = useCallback((zoom) => {
     // Base width at zoom 10, adjust inversely with zoom
@@ -382,25 +401,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
       )
     );
   }, [selectedAircraft?.id, calculateBearing]);
-
-  // Auto-select and place aircraft when producers change
-  useEffect(() => {
-    if (producers && producers.length > 0) {
-      const newAircraftList = producers.map(producer => ({
-        id: producer.id,
-        startPoint: L.latLng(OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON),
-        destinationPoint: null,
-        stepCoordinates: [],
-        aircraftRotation: 0
-      }));
-
-      setAircraft(newAircraftList);
-
-      if (newAircraftList.length > 0) {
-        setSelectedAircraftId(newAircraftList[newAircraftList.length - 1].id);
-      }
-    }
-  }, [producers]);
 
   // Get simulation state
   // const getSimulationState = useCallback(() => ({
