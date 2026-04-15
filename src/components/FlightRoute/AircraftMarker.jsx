@@ -2,13 +2,6 @@ import React from 'react';
 import { Marker } from 'react-leaflet';
 import L from 'leaflet';
 
-const AIRCRAFT_ICON = L.divIcon({
-  className: 'single-aircraft-icon',
-  html: '<div style="font-size:60px;font-weight:bold;color:#d32f2f;display:flex;align-items:center;justify-content:center;width:70px;height:70px;">&#x2708;</div>',
-  iconSize: [70, 70],
-  iconAnchor: [35, 35]
-});
-
 const AircraftMarker = ({ position, onDragEnd, rotation = 0 }) => {
   if (!position) return null;
   

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 'react-leaflet';
-import { Box, Paper, Typography, Switch, FormControlLabel, Slider, Button, LinearProgress } from '@mui/material';
+import { Box, Paper, Typography, Slider } from '@mui/material';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import FlightRouteKafkaProducer from './FlightRouteKafkaProducer';
@@ -12,22 +12,6 @@ L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-const AIRCRAFT_ICON = L.divIcon({
-  className: 'aircraft-marker',
-  html: ' Aircraft ',
-  iconSize: [60, 20],
-  iconAnchor: [30, 10],
-  style: {
-    fontSize: '16px',
-    fontWeight: 'bold',
-    color: '#1976d2',
-    backgroundColor: 'white',
-    border: '2px solid #1976d2',
-    borderRadius: '4px',
-    padding: '2px'
-  }
 });
 
 const DEST_ICON = L.icon({
