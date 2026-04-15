@@ -15,7 +15,7 @@ const AircraftMarker = ({ position, onDragEnd, rotation = 0 }) => {
   // Create dynamic icon with rotation
   const rotatedIcon = L.divIcon({
     className: 'single-aircraft-icon',
-    html: `<div style="font-size:48px;font-weight:bold;color:#1976d2;transform:rotate(${rotation + 90}deg);transform-origin:center;">&#x2708;</div>`,
+    html: `<div style="font-size:48px;font-weight:bold;color:#1976d2;transform:rotate(${rotation + 270}deg);transform-origin:center;">&#x2708;</div>`,
     iconSize: [60, 45],
     iconAnchor: [30, 22]
   });
