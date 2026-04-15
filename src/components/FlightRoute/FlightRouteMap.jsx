@@ -223,8 +223,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     return R * c;
   }, []);
 
-  
-  
   // Great-circle route (accounts for Earth's curvature)
   const getGreatCircleRoute = useCallback((start, end, numPoints = 50) => {
     const points = [];
