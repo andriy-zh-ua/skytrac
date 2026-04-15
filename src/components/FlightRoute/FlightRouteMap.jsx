@@ -432,7 +432,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     if (selectedAircraft?.startPoint && selectedAircraft?.destinationPoint) {
       generateRoute();
     }
-  }, [selectedAircraft, generateRoute]);
+  }, [selectedAircraft?.startPoint, selectedAircraft?.destinationPoint]);
 
   // Update aircraft rotation when destination is set
   useEffect(() => {
