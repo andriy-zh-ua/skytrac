@@ -400,28 +400,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
           4. Drag aircraft to adjust start point
         </Typography>
 
-        <FormControlLabel
-          control={
-            <Switch
-              checked={useOSRM}
-              onChange={(e) => setUseOSRM(e.target.checked)}
-              size="small"
-            />
-          }
-          label="Use OSRM Routing"
-        />
-
-        <FormControlLabel
-          control={
-            <Switch
-              checked={useGreatCircle}
-              onChange={(e) => setUseGreatCircle(e.target.checked)}
-              size="small"
-            />
-          }
-          label="Use Earth Curvature"
-        />
-
+        
         <Box sx={{ mt: 2 }}>
           <Typography variant="body2" gutterBottom>
             Step Distance: {stepDistance}m
