@@ -90,6 +90,11 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     }
   }, [producers]);
 
+  // Handle aircraft click to select aircraft
+  const handleAircraftClick = useCallback((aircraftId) => {
+    setSelectedAircraftId(aircraftId);
+  }, []);
+
   // Calculate responsive stroke width based on zoom level
   const getStrokeWidth = useCallback((zoom) => {
     // Base width at zoom 10, adjust inversely with zoom
@@ -445,6 +450,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
             onDragEnd={(e) => handleAircraftDragEnd(e, ac.id)}
             rotation={ac.aircraftRotation}
             selected={ac.id === selectedAircraftId}
+            onClick={() => handleAircraftClick(ac.id)}
           />
         ))}
 
