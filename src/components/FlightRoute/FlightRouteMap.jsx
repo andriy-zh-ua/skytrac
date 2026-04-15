@@ -388,11 +388,11 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
           backgroundColor: 'rgba(255, 255, 255, 0.95)'
         }}
       >
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="subtitle1" gutterBottom sx={{ fontSize: '14px' }}>
           Flight Route Controls
         </Typography>
         
-        <Typography variant="body2" gutterBottom>
+        <Typography variant="body2" gutterBottom sx={{ fontSize: '11px' }}>
           <strong>Instructions:</strong><br />
           1. Add Producer in Kafka schema (aircraft appears)<br />
           2. Click on map to set destination<br />
@@ -402,7 +402,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
 
         
         <Box sx={{ mt: 2 }}>
-          <Typography variant="body2" gutterBottom>
+          <Typography variant="body2" gutterBottom sx={{ fontSize: '11px' }}>
             Step Distance: {stepDistance}m
           </Typography>
           <Slider
@@ -416,7 +416,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         </Box>
 
         {stepCoordinates.length > 0 && (
-          <Typography variant="body2" sx={{ mt: 2 }}>
+          <Typography variant="body2" sx={{ mt: 2, fontSize: '11px' }}>
             Steps: {stepCoordinates.length} points
           </Typography>
         )}
