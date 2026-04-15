@@ -68,62 +68,6 @@ const App = () => {
     // The streaming stop will be handled by the FlightRouteKafkaProducer hook
   }, []);
 
-  // Handle new connections between nodes
-  const onConnect = useCallback(
-    (params) => {
-      // Add the new edge
-      const newEdges = addEdge({
-        ...params,
-        style: { 
-          stroke: '#b1b1b7',
-          strokeWidth: 2,
-        },
-        markerEnd: {
-          type: 'arrowclosed',
-          color: '#b1b1b7',
-        }
-      }, edges);
-      
-      // Automatically select the producer if this is a producer connection
-      const producerNode = nodes.find(node => node.id === params.source && node.type === 'producer');
-      if (producerNode && !producerNode.selected) {
-        // Update nodes to select the producer and deselect others
-        setNodes((nds) => nds.map(node => 
-          node.id === params.source 
-            ? { ...node, selected: true }
-            : { ...node, selected: false } // Deselect all others
-        ));
-      }
-      
-      setEdges(newEdges);
-    },
-    [setEdges, setNodes, nodes, edges]
-  );
-
-  // Update edge styles based on producer state
-  const updateEdgeStyles = useCallback((producerId, isActive) => {
-    setEdges((eds) => eds.map(edge => {
-      if (edge.source === producerId) {
-        return {
-          ...edge,
-          style: isActive ? {
-            stroke: '#4caf50',
-            strokeWidth: 3,
-          } : {
-            stroke: '#b1b1b7',
-            strokeWidth: 2,
-          },
-          markerEnd: {
-            type: 'arrowclosed',
-            color: isActive ? '#4caf50' : '#b1b1b7',
-          },
-          className: isActive ? 'running-producer' : undefined
-        };
-      }
-      return edge;
-    }));
-  }, [setEdges]);
-
   // Selection function - select one node, deselect others, and track current objects
   const selectNode = (nodeId, preserveBroker = false) => {
     setNodes((nds) => {
@@ -168,6 +112,7 @@ const App = () => {
         newCurrentObjects.broker = currentObjects.broker;
       }
       
+      // Update currentObjects to trigger map selection synchronization
       setCurrentObjects(newCurrentObjects);
       
       return nds.map((node) =>
@@ -180,6 +125,58 @@ const App = () => {
       );
     });
   };
+
+  // Handle new connections between nodes
+  const onConnect = useCallback(
+    (params) => {
+      // Add the new edge
+      const newEdges = addEdge({
+        ...params,
+        style: { 
+          stroke: '#b1b1b7',
+          strokeWidth: 2,
+        },
+        markerEnd: {
+          type: 'arrowclosed',
+          color: '#b1b1b7',
+        }
+      }, edges);
+      
+      // Automatically select the producer if this is a producer connection
+      const producerNode = nodes.find(node => node.id === params.source && node.type === 'producer');
+      if (producerNode && !producerNode.selected) {
+        // Use selectNode to ensure proper synchronization with map
+        selectNode(params.source);
+      }
+      
+      setEdges(newEdges);
+    },
+    [setEdges, setNodes, nodes, edges, selectNode]
+  );
+
+  // Update edge styles based on producer state
+  const updateEdgeStyles = useCallback((producerId, isActive) => {
+    setEdges((eds) => eds.map(edge => {
+      if (edge.source === producerId) {
+        return {
+          ...edge,
+          style: isActive ? {
+            stroke: '#4caf50',
+            strokeWidth: 3,
+          } : {
+            stroke: '#b1b1b7',
+            strokeWidth: 2,
+          },
+          markerEnd: {
+            type: 'arrowclosed',
+            color: isActive ? '#4caf50' : '#b1b1b7',
+          },
+          className: isActive ? 'running-producer' : undefined
+        };
+      }
+      return edge;
+    }));
+  }, [setEdges]);
 
   // Handle aircraft selection from FlightRouteMap
   const handleAircraftSelect = useCallback((producerId) => {
@@ -514,7 +511,7 @@ const calculateConsumerPosition = (nodes) => {
               edges={edges}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
+              onConnect={onConnect} // eslint-disable-line no-undef
               selectNode={selectNode}
               clearSelection={clearSelection}
               onDuplicateTopic={handleDuplicateTopic}
