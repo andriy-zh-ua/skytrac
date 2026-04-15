@@ -5,7 +5,7 @@ const CustomAppBar = ({ onAddNode, hasBrokers, onExportSchema, /*, kafkaStats */
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Skytrac - Flight Routes & Kafka Architecture
+          Flight Routes & Redis Event Streaming Architecture
         </Typography>
         
         {/* Kafka Controls */}

@@ -56,6 +56,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
   const [useGreatCircle, setUseGreatCircle] = useState(true); // Earth curvature
   const [mapZoom, setMapZoom] = useState(10); // Track map zoom level
   const aircraftListRef = useRef(null); // Ref for scrollable aircraft list
+  const prevAircraftLengthRef = useRef(0); // Track previous aircraft array length
 
   // Auto-scroll to selected aircraft in the list
   useEffect(() => {
@@ -102,12 +103,19 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     }
   }, [producers]);
 
-  // Auto-select most recently added aircraft
+  // Auto-select most recently added aircraft when new aircraft is added
   useEffect(() => {
-    if (aircraft.length > 0) {
+    const currentLength = aircraft.length;
+    const prevLength = prevAircraftLengthRef.current;
+    
+    // Check if a new aircraft was added (array length increased)
+    if (currentLength > prevLength && currentLength > 0) {
       // Select the last aircraft (most recently added)
       setSelectedAircraftId(aircraft[aircraft.length - 1].id);
     }
+    
+    // Update the previous length reference
+    prevAircraftLengthRef.current = currentLength;
   }, [aircraft]);
 
   // Handle aircraft drag end to update aircraft position
@@ -121,10 +129,8 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
           : ac
       )
     );
-  }, []);
 
-  // Handle aircraft drag start
-  const handleAircraftDragStart = useCallback((e, aircraftId) => {
+    setSelectedAircraftId(aircraftId);
   }, []);
 
   // Handle aircraft click to select aircraft
@@ -471,7 +477,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
           <AircraftMarker 
             key={ac.id}
             position={ac.startPoint}
-            onDragStart={(e) => handleAircraftDragStart(e, ac.id)}
             onDragEnd={(e) => handleAircraftDragEnd(e, ac.id)}
             rotation={ac.aircraftRotation}
             selected={ac.id === selectedAircraftId}
