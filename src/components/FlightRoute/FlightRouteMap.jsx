@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 'react-leaflet';
 import { Box, Paper, Typography, Slider } from '@mui/material';
 import L from 'leaflet';
@@ -55,6 +55,21 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
   const [stepDistance, setStepDistance] = useState(200); // meters
   const [useGreatCircle, setUseGreatCircle] = useState(true); // Earth curvature
   const [mapZoom, setMapZoom] = useState(10); // Track map zoom level
+  const aircraftListRef = useRef(null); // Ref for scrollable aircraft list
+
+  // Auto-scroll to selected aircraft in the list
+  useEffect(() => {
+    if (selectedAircraftId && aircraftListRef.current) {
+      const selectedElement = aircraftListRef.current.querySelector(`[data-aircraft-id="${selectedAircraftId}"]`);
+      if (selectedElement) {
+        selectedElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest',
+          inline: 'nearest'
+        });
+      }
+    }
+  }, [selectedAircraftId]);
 
   // Add aircraft information from Kafka canvas producers into aircraft array
   useEffect(() => {
@@ -532,10 +547,14 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
             <Typography variant="body2" sx={{ fontSize: '12px', fontWeight: 'bold', mb: 1 }}>
               Aircraft Records ({aircraft.length})
             </Typography>
-            <Box sx={{ maxHeight: '150px', overflowY: 'auto' }}>
+            <Box 
+              ref={aircraftListRef}
+              sx={{ maxHeight: '150px', overflowY: 'auto' }}
+            >
               {[...aircraft].reverse().map((ac) => (
                 <Box 
                   key={ac.id}
+                  data-aircraft-id={ac.id}
                   sx={{ 
                     mb: 1, 
                     p: 1, 
