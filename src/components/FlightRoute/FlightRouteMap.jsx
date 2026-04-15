@@ -54,6 +54,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
   const [useOSRM, setUseOSRM] = useState(true);
   const [stepDistance, setStepDistance] = useState(200); // meters
   const [aircraftRotation, setAircraftRotation] = useState(0); // degrees
+  const [useGreatCircle, setUseGreatCircle] = useState(true); // Earth curvature
 
   // Calculate bearing between two points
   const calculateBearing = useCallback((startLat, startLon, endLat, endLon) => {
@@ -113,13 +114,51 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
     return decoded.map(([lat, lon]) => ({ lat, lon }));
   }, []);
 
-  // Straight-line fallback
-  const getStraightLineRoute = useCallback((start, end, numSegments = 50) => {
+  // Great-circle route (accounts for Earth's curvature)
+  const getGreatCircleRoute = useCallback((start, end, numPoints = 50) => {
     const points = [];
-    for (let i = 0; i <= numSegments; i++) {
-      const fraction = i / numSegments;
-      const lat = start.lat + (end.lat - start.lat) * fraction;
-      const lon = start.lng + (end.lng - start.lng) * fraction;
+    
+    // Convert to radians
+    const lat1 = start.lat * Math.PI / 180;
+    const lon1 = start.lng * Math.PI / 180;
+    const lat2 = end.lat * Math.PI / 180;
+    const lon2 = end.lng * Math.PI / 180;
+    
+    // Calculate great-circle distance
+    const dLat = lat2 - lat1;
+    const dLon = lon2 - lon1;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    
+    // Generate points along the great-circle path
+    for (let i = 0; i <= numPoints; i++) {
+      const f = i / numPoints;
+      
+      // Calculate intermediate point
+      const A = Math.sin((1-f) * c) / Math.sin(c);
+      const B = Math.sin(f * c) / Math.sin(c);
+      
+      const x = A * Math.cos(lat1) * Math.cos(lon1) + B * Math.cos(lat2) * Math.cos(lon2);
+      const y = A * Math.cos(lat1) * Math.sin(lon1) + B * Math.cos(lat2) * Math.sin(lon2);
+      const z = A * Math.sin(lat1) + B * Math.sin(lat2);
+      
+      // Convert back to degrees
+      const lat = Math.atan2(z, Math.sqrt(x*x + y*y)) * 180 / Math.PI;
+      const lon = Math.atan2(y, x) * 180 / Math.PI;
+      
+      points.push({ lat, lon });
+    }
+    
+    return points;
+  }, []);
+
+  // Straight line route (fallback)
+  const getStraightLineRoute = useCallback((start, end, numPoints = 50) => {
+    const points = [];
+    for (let i = 0; i <= numPoints; i++) {
+      const ratio = i / numPoints;
+      const lat = start.lat + (end.lat - start.lat) * ratio;
+      const lon = start.lng + (end.lng - start.lng) * ratio;
       points.push({ lat, lon });
     }
     return points;
@@ -180,11 +219,15 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         routeCoords = await getOSRMRoute(startPoint, destinationPoint);
       }
     } catch (err) {
-      console.warn('OSRM failed, using straight line fallback', err);
+      console.warn('OSRM failed, using great circle fallback', err);
     }
 
     if (routeCoords.length === 0) {
-      routeCoords = getStraightLineRoute(startPoint, destinationPoint, 50);
+      if (useGreatCircle) {
+        routeCoords = getGreatCircleRoute(startPoint, destinationPoint, 50);
+      } else {
+        routeCoords = getStraightLineRoute(startPoint, destinationPoint, 50);
+      }
     }
 
     // Process directly into small simulation steps
@@ -331,6 +374,17 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
             />
           }
           label="Use OSRM Routing"
+        />
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={useGreatCircle}
+              onChange={(e) => setUseGreatCircle(e.target.checked)}
+              size="small"
+            />
+          }
+          label="Use Earth Curvature"
         />
 
         <Box sx={{ mt: 2 }}>
