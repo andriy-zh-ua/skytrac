@@ -47,7 +47,7 @@ function MapClickHandler({ onMapClick }) {
   return null;
 }
 
-const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], kafkaIntegration }) => {
+const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], kafkaIntegration, producers }) => {
   const [startPoint, setStartPoint] = useState(null);
   const [destinationPoint, setDestinationPoint] = useState(null);
   const [fullRoute, setFullRoute] = useState([]);
@@ -186,13 +186,10 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
     });
   }, [startPoint, destinationPoint, useOSRM, stepDistance, getOSRMRoute, getStraightLineRoute, resampleRoute, onRouteUpdate]);
 
-  // Handle map click for destination or aircraft placement
+  // Handle map click for destination only (aircraft placed by producer creation)
   const handleMapClick = useCallback((latlng) => {
-    if (!startPoint) {
-      // If no aircraft exists, place it
-      setStartPoint(latlng);
-    } else {
-      // If aircraft exists, set destination
+    if (startPoint) {
+      // Only set destination if aircraft exists
       setDestinationPoint(latlng);
     }
   }, [startPoint]);
@@ -211,7 +208,13 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
     }
   }, [startPoint, destinationPoint, generateRoute]);
 
-  // Map starts empty - user will place aircraft manually
+  // Auto-place aircraft when producer is created in Kafka schema
+  useEffect(() => {
+    if (producers && producers.length > 0 && !startPoint) {
+      // Place aircraft at initial center when first producer is created
+      setStartPoint(L.latLng(initialCenter[0], initialCenter[1]));
+    }
+  }, [producers, startPoint, initialCenter]);
 
   // Get simulation state
   const getSimulationState = useCallback(() => ({
@@ -285,8 +288,8 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         
         <Typography variant="body2" gutterBottom>
           <strong>Instructions:</strong><br />
-          1. Click anywhere to place aircraft<br />
-          2. Click again to set destination<br />
+          1. Add Producer in Kafka schema (aircraft appears)<br />
+          2. Click on map to set destination<br />
           3. Route generates automatically<br />
           4. Drag aircraft to adjust start point
         </Typography>

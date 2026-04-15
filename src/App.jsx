@@ -470,6 +470,7 @@ const calculateConsumerPosition = (nodes) => {
               onRouteUpdate={handleRouteUpdate}
               initialCenter={[45.4215, -75.6972]} // Ottawa/Gatineau area
               kafkaIntegration={kafkaIntegration}
+              producers={nodes.filter(node => node.type === 'producer')}
             />
           </Box>
           
