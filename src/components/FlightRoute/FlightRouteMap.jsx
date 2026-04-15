@@ -51,9 +51,7 @@ function MapZoomTracker({ onZoomChange }) {
 const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON], kafkaIntegration, producers, selectedProducerId, onProducerActivate, onProducerDeactivate, onAircraftSelect }) => {
   const [aircraft, setAircraft] = useState([]); // Array to store aircraft objects from Kafka canvas
   const [selectedAircraftId, setSelectedAircraftId] = useState(null);
-  const [useOSRM, setUseOSRM] = useState(true);
   const [stepDistance, setStepDistance] = useState(200); // meters
-  const [useGreatCircle, setUseGreatCircle] = useState(true); // Earth curvature
   const [mapZoom, setMapZoom] = useState(10); // Track map zoom level
   const aircraftListRef = useRef(null); // Ref for scrollable aircraft list
   const prevAircraftLengthRef = useRef(0); // Track previous aircraft array length
@@ -78,6 +76,17 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
       setSelectedAircraftId(selectedProducerId);
     }
   }, [selectedProducerId, selectedAircraftId]);
+
+  // Recalculate routes for all aircraft when step distance changes
+  useEffect(() => {
+    // Regenerate routes for all aircraft that have destinations
+    aircraft.forEach(ac => {
+      if (ac.destinationPoint && ac.startPoint) {
+        // Trigger route regeneration for each aircraft
+        generateRouteForAircraft(ac);
+      }
+    });
+  }, [stepDistance]);
 
   // Add aircraft information from Kafka canvas producers into aircraft array
   useEffect(() => {
@@ -184,12 +193,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     return (bearing + 360) % 360;
   }, []);
 
-  // // Route data for Kafka streaming
-  // const routeData = {
-  //   start: startPoint ? { lat: startPoint.lat, lon: startPoint.lng } : null,
-  //   destination: destinationPoint ? { lat: destinationPoint.lat, lon: destinationPoint.lng } : null,
-  //   stepCoordinates: stepCoordinates || []
-  // };
   // Route data for Kafka streaming - based on selected aircraft
   const selectedAircraft = aircraft.find(a => a.id === selectedAircraftId);
 
@@ -220,25 +223,8 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     return R * c;
   }, []);
 
-  // OSRM routing
-  const getOSRMRoute = useCallback(async (start, end) => {
-    const profile = 'driving';
-    const url = `https://router.project-osrm.org/route/v1/${profile}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=polyline`;
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('OSRM request failed');
-
-    const data = await res.json();
-    if (!data.routes || data.routes.length === 0) throw new Error('No route found');
-
-    const encoded = data.routes[0].geometry;
-    // Decode polyline (precision 5 for OSRM)
-    const decoded = L.PolylineUtil.decode(encoded, 5); // returns [[lat, lon], ...]
-
-    // Convert to Leaflet-friendly {lat, lon} objects
-    return decoded.map(([lat, lon]) => ({ lat, lon }));
-  }, []);
-
+  
+  
   // Great-circle route (accounts for Earth's curvature)
   const getGreatCircleRoute = useCallback((start, end, numPoints = 50) => {
     const points = [];
@@ -274,18 +260,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
       points.push({ lat, lon });
     }
     
-    return points;
-  }, []);
-
-  // Straight line route (fallback)
-  const getStraightLineRoute = useCallback((start, end, numPoints = 50) => {
-    const points = [];
-    for (let i = 0; i <= numPoints; i++) {
-      const ratio = i / numPoints;
-      const lat = start.lat + (end.lat - start.lat) * ratio;
-      const lon = start.lng + (end.lng - start.lng) * ratio;
-      points.push({ lat, lon });
-    }
     return points;
   }, []);
 
@@ -333,30 +307,17 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     return steps;
   }, [haversineDistance]);
 
+  // Generate route for selected aircraft
   const generateRoute = useCallback(async () => {
     if (!selectedAircraft || !selectedAircraft.destinationPoint) return;
 
     const start = selectedAircraft.startPoint;
     const end = selectedAircraft.destinationPoint;
 
-    let routeCoords = [];
+    // Always use Great Circle routing for aircraft
+    const routeCoords = getGreatCircleRoute(start, end, 50);
 
-    try {
-      if (useOSRM) {
-        routeCoords = await getOSRMRoute(start, end);
-      }
-    } catch (err) {
-      console.warn('OSRM failed, using great circle fallback', err);
-    }
-
-    if (routeCoords.length === 0) {
-      if (useGreatCircle) {
-        routeCoords = getGreatCircleRoute(start, end, 50);
-      } else {
-        routeCoords = getStraightLineRoute(start, end, 50);
-      }
-    }
-
+    // Resample the route into small steps
     const steps = resampleRoute(routeCoords, stepDistance);
 
     // Update the specific aircraft
@@ -373,48 +334,8 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
       destination: { lat: end.lat, lon: end.lng },
       stepCoordinates: steps
     });
-  }, [selectedAircraft, useOSRM, stepDistance, getOSRMRoute, getGreatCircleRoute, getStraightLineRoute, resampleRoute, onRouteUpdate]);
-  // Generate route
-  // const generateRoute = useCallback(async () => {
-  //   if (!startPoint || !destinationPoint) return;
+  }, [selectedAircraft, stepDistance, getGreatCircleRoute, resampleRoute, onRouteUpdate]);
 
-  //   let routeCoords = [];
-
-  //   try {
-  //     if (useOSRM) {
-  //       routeCoords = await getOSRMRoute(startPoint, destinationPoint);
-  //     }
-  //   } catch (err) {
-  //     console.warn('OSRM failed, using great circle fallback', err);
-  //   }
-
-  //   if (routeCoords.length === 0) {
-  //     if (useGreatCircle) {
-  //       routeCoords = getGreatCircleRoute(startPoint, destinationPoint, 50);
-  //     } else {
-  //       routeCoords = getStraightLineRoute(startPoint, destinationPoint, 50);
-  //     }
-  //   }
-
-  //   // Process directly into small simulation steps
-  //   const steps = resampleRoute(routeCoords, stepDistance);
-  //   setStepCoordinates(steps);
-
-  //   // Notify parent component
-  //   onRouteUpdate({
-  //     start: { lat: startPoint.lat, lon: startPoint.lng },
-  //     destination: { lat: destinationPoint.lat, lon: destinationPoint.lng },
-  //     stepCoordinates: steps
-  //   });
-  // }, [startPoint, destinationPoint, useOSRM, stepDistance, getOSRMRoute, getStraightLineRoute, resampleRoute, onRouteUpdate]);
-
-  // Handle map click for destination only (aircraft placed by producer creation)
-  // const handleMapClick = useCallback((latlng) => {
-  //   if (startPoint) {
-  //     // Only set destination if aircraft exists
-  //     setDestinationPoint(latlng);
-  //   }
-  // }, [startPoint]);
   const handleMapClick = useCallback((latlng) => {
     if (!selectedAircraftId) return;
 
@@ -427,6 +348,39 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     );
   }, [selectedAircraftId]);
 
+  // Generate route for a specific aircraft
+  const generateRouteForAircraft = useCallback(async (aircraft) => {
+    if (!aircraft.startPoint || !aircraft.destinationPoint) {
+      return;
+    }
+
+    const start = aircraft.startPoint;
+    const end = aircraft.destinationPoint;
+
+    try {
+      // Generate great circle route
+      const routeCoords = getGreatCircleRoute(start, end);
+      
+      // Resample the route into small steps
+      const steps = resampleRoute(routeCoords, stepDistance);
+
+      // Update the specific aircraft
+      setAircraft(prev =>
+        prev.map(ac =>
+          ac.id === aircraft.id
+            ? {
+                ...ac,
+                destination: { lat: end.lat, lon: end.lng },
+                stepCoordinates: steps
+              }
+            : ac
+        )
+      );
+    } catch (error) {
+      console.error('Route generation failed for aircraft', aircraft.id, error);
+    }
+  }, [stepDistance, getGreatCircleRoute, resampleRoute]);
+
   // Auto-generate route when selected aircraft has both start and destination
   useEffect(() => {
     if (selectedAircraft?.startPoint && selectedAircraft?.destinationPoint) {
@@ -436,7 +390,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
 
   // Update aircraft rotation when destination is set
   useEffect(() => {
-    if (!selectedAircraft || !selectedAircraft.destinationPoint) return;
+    if (!selectedAircraft || !selectedAircraft.startPoint || !selectedAircraft.destinationPoint) return;
 
     const bearing = calculateBearing(
       selectedAircraft.startPoint.lat,
@@ -452,7 +406,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
           : ac
       )
     );
-  }, [selectedAircraft?.id, selectedAircraft?.destinationPoint, calculateBearing]);
+  }, [selectedAircraft?.id, selectedAircraft?.startPoint, selectedAircraft?.destinationPoint, calculateBearing]);
 
   // Get simulation state
   // const getSimulationState = useCallback(() => ({
@@ -561,12 +515,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
             size="small"
           />
         </Box>
-
-        {selectedAircraft?.stepCoordinates.length > 0 && (
-          <Typography variant="body2" sx={{ mt: 2, fontSize: '11px' }}>
-            Steps: {selectedAircraft.stepCoordinates.length} points
-          </Typography>
-        )}
 
         {/* Aircraft Records Section */}
         {aircraft.length > 0 && (
