@@ -533,7 +533,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
               Aircraft Records ({aircraft.length})
             </Typography>
             <Box sx={{ maxHeight: '150px', overflowY: 'auto' }}>
-              {aircraft.map((ac) => (
+              {[...aircraft].reverse().map((ac) => (
                 <Box 
                   key={ac.id}
                   sx={{ 
