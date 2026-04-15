@@ -59,36 +59,54 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
   // Add aircraft information from Kafka canvas producers into aircraft array
   useEffect(() => {
     if (producers && producers.length > 0) {
-      const newAircraft = producers.map(producer => ({
-        id: producer.id,
-        startPoint: L.latLng(OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON),
-        destinationPoint: null,
-        stepCoordinates: [],
-        aircraftRotation: 0
-      }));
-       
-      setAircraft(newAircraft);
+      setAircraft(prevAircraft => {
+        const updatedAircraft = [...prevAircraft];
+        
+        // Add new aircraft that don't already exist
+        producers.forEach(producer => {
+          const existingAircraft = updatedAircraft.find(ac => ac.id === producer.id);
+          
+          if (!existingAircraft) {
+            // Add new aircraft with default position
+            updatedAircraft.push({
+              id: producer.id,
+              startPoint: L.latLng(OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON),
+              destinationPoint: null,
+              stepCoordinates: [],
+              aircraftRotation: 0
+            });
+          }
+        });
+        
+        // Remove aircraft that no longer have corresponding producers
+        const producerIds = new Set(producers.map(p => p.id));
+        const filteredAircraft = updatedAircraft.filter(ac => producerIds.has(ac.id));
+        
+        return filteredAircraft;
+      });
     }
   }, [producers]);
 
-  // Auto-select and place aircraft when producers change
+  // Auto-select most recently added aircraft
   useEffect(() => {
-    if (producers && producers.length > 0) {
-      const newAircraftList = producers.map(producer => ({
-        id: producer.id,
-        startPoint: L.latLng(OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON),
-        destinationPoint: null,
-        stepCoordinates: [],
-        aircraftRotation: 0
-      }));
-
-      setAircraft(newAircraftList);
-
-      if (newAircraftList.length > 0) {
-        setSelectedAircraftId(newAircraftList[newAircraftList.length - 1].id);
-      }
+    if (aircraft.length > 0) {
+      // Select the last aircraft (most recently added)
+      setSelectedAircraftId(aircraft[aircraft.length - 1].id);
     }
-  }, [producers]);
+  }, [aircraft]);
+
+  // Handle aircraft drag end to update aircraft position
+  const handleAircraftDragEnd = useCallback((e, aircraftId) => {
+    const position = e.target.getLatLng();
+
+    setAircraft(prev =>
+      prev.map(ac =>
+        ac.id === aircraftId
+          ? { ...ac, startPoint: position }
+          : ac
+      )
+    );
+  }, []);
 
   // Handle aircraft click to select aircraft
   const handleAircraftClick = useCallback((aircraftId) => {
@@ -366,19 +384,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
       )
     );
   }, [selectedAircraftId]);
-
-  // Handle aircraft drag end
-  const handleAircraftDragEnd = useCallback((e, aircraftId) => {   // ← add aircraftId parameter
-    const position = e.target.getLatLng();
-
-    setAircraft(prev =>
-      prev.map(ac =>
-        ac.id === aircraftId
-          ? { ...ac, startPoint: position }
-          : ac
-      )
-    );
-  }, []);
 
   // Auto-generate route when selected aircraft has both start and destination
   useEffect(() => {
