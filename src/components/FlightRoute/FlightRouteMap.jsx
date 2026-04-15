@@ -211,10 +211,12 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
   // Auto-place aircraft when producer is created in Kafka schema
   useEffect(() => {
     if (producers && producers.length > 0 && !startPoint) {
-      // Place aircraft at initial center when first producer is created
-      setStartPoint(L.latLng(initialCenter[0], initialCenter[1]));
+      // Place aircraft above Ottawa International Airport when first producer is created
+      // Ottawa International Airport coordinates: 45.3225° N, 75.6672° W
+      const airportCoords = [45.3225, -75.6672];
+      setStartPoint(L.latLng(airportCoords[0], airportCoords[1]));
     }
-  }, [producers, startPoint, initialCenter]);
+  }, [producers, startPoint]);
 
   // Get simulation state
   const getSimulationState = useCallback(() => ({
