@@ -50,7 +50,6 @@ function MapClickHandler({ onMapClick }) {
 const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], kafkaIntegration, producers }) => {
   const [startPoint, setStartPoint] = useState(null);
   const [destinationPoint, setDestinationPoint] = useState(null);
-  const [fullRoute, setFullRoute] = useState([]);
   const [stepCoordinates, setStepCoordinates] = useState([]);
   const [useOSRM, setUseOSRM] = useState(true);
   const [stepDistance, setStepDistance] = useState(200); // meters
@@ -77,7 +76,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
   const routeData = {
     start: startPoint ? { lat: startPoint.lat, lon: startPoint.lng } : null,
     destination: destinationPoint ? { lat: destinationPoint.lat, lon: destinationPoint.lng } : null,
-    fullRoute: fullRoute || [],
     stepCoordinates: stepCoordinates || []
   };
 
@@ -189,9 +187,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
       routeCoords = getStraightLineRoute(startPoint, destinationPoint, 50);
     }
 
-    setFullRoute(routeCoords);
-
-    // Process into small simulation steps
+    // Process directly into small simulation steps
     const steps = resampleRoute(routeCoords, stepDistance);
     setStepCoordinates(steps);
 
@@ -199,7 +195,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
     onRouteUpdate({
       start: { lat: startPoint.lat, lon: startPoint.lng },
       destination: { lat: destinationPoint.lat, lon: destinationPoint.lng },
-      fullRoute: routeCoords,
       stepCoordinates: steps
     });
   }, [startPoint, destinationPoint, useOSRM, stepDistance, getOSRMRoute, getStraightLineRoute, resampleRoute, onRouteUpdate]);
@@ -253,9 +248,8 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
   const getSimulationState = useCallback(() => ({
     start: startPoint ? { lat: startPoint.lat, lon: startPoint.lng } : null,
     destination: destinationPoint ? { lat: destinationPoint.lat, lon: destinationPoint.lng } : null,
-    fullRoute,
     stepCoordinates
-  }), [startPoint, destinationPoint, fullRoute, stepCoordinates]);
+  }), [startPoint, destinationPoint, stepCoordinates]);
 
   // Expose state to parent
   useEffect(() => {
@@ -294,9 +288,9 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         )}
 
         {/* Route polyline */}
-        {fullRoute.length > 0 && (
+        {stepCoordinates.length > 0 && (
           <Polyline
-            positions={fullRoute.map(p => [p.lat, p.lon])}
+            positions={stepCoordinates.map(p => [p.lat, p.lon])}
             color="blue"
             weight={4}
             opacity={0.8}
@@ -356,7 +350,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         {stepCoordinates.length > 0 && (
           <>
             <Typography variant="body2" sx={{ mt: 2 }}>
-              Route: {fullRoute.length} points<br />
               Steps: {stepCoordinates.length} points
             </Typography>
 
