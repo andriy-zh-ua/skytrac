@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 'react-leaflet';
 import { Box, Paper, Typography, Switch, FormControlLabel, Slider, Button, LinearProgress } from '@mui/material';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -47,6 +47,27 @@ function MapClickHandler({ onMapClick }) {
   return null;
 }
 
+// Map zoom tracker component
+function MapZoomTracker({ onZoomChange }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (map) {
+      const handleZoomEnd = () => {
+        onZoomChange(map.getZoom());
+      };
+      
+      map.on('zoomend', handleZoomEnd);
+      
+      return () => {
+        map.off('zoomend', handleZoomEnd);
+      };
+    }
+  }, [map, onZoomChange]);
+  
+  return null;
+}
+
 const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], kafkaIntegration, producers }) => {
   const [startPoint, setStartPoint] = useState(null);
   const [destinationPoint, setDestinationPoint] = useState(null);
@@ -55,6 +76,19 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
   const [stepDistance, setStepDistance] = useState(200); // meters
   const [aircraftRotation, setAircraftRotation] = useState(0); // degrees
   const [useGreatCircle, setUseGreatCircle] = useState(true); // Earth curvature
+  const [mapZoom, setMapZoom] = useState(10); // Track map zoom level
+
+  // Calculate responsive stroke width based on zoom level
+  const getStrokeWidth = useCallback((zoom) => {
+    // Base width at zoom 10, adjust inversely with zoom
+    const baseWidth = 4;
+    const minWidth = 1;
+    const maxWidth = 8;
+    
+    // Inverse relationship: higher zoom = thinner line
+    const width = Math.max(minWidth, Math.min(maxWidth, baseWidth / Math.pow(2, (zoom - 10) * 0.2)));
+    return Math.round(width * 10) / 10; // Round to 1 decimal place
+  }, []);
 
   // Calculate bearing between two points
   const calculateBearing = useCallback((startLat, startLon, endLat, endLon) => {
@@ -313,6 +347,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         />
         
         <MapClickHandler onMapClick={handleMapClick} />
+        <MapZoomTracker onZoomChange={setMapZoom} />
 
         {/* Aircraft (draggable start point) */}
         <AircraftMarker 
@@ -335,7 +370,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
           <Polyline
             positions={stepCoordinates.map(p => [p.lat, p.lon])}
             color="blue"
-            weight={4}
+            weight={getStrokeWidth(mapZoom)}
             opacity={0.8}
           />
         )}
