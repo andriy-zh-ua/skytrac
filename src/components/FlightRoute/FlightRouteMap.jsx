@@ -158,9 +158,9 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
   // Calculate responsive stroke width based on zoom level
   const getStrokeWidth = useCallback((zoom) => {
     // Base width at zoom 10, adjust inversely with zoom
-    const baseWidth = 4;
-    const minWidth = 1;
-    const maxWidth = 8;
+    const baseWidth = 2;
+    const minWidth = 0.5;
+    const maxWidth = 4;
     
     // Inverse relationship: higher zoom = thinner line
     const width = Math.max(minWidth, Math.min(maxWidth, baseWidth / Math.pow(2, (zoom - 10) * 0.2)));
