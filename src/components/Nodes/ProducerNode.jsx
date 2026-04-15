@@ -26,6 +26,7 @@ const ProducerNode = props => {
 
   return (
     <div
+      onClick={() => selectNode && selectNode(id)}
       style={{
         display: 'flex',
         flexDirection: 'column',

@@ -48,7 +48,7 @@ function MapZoomTracker({ onZoomChange }) {
   return null;
 }
 
-const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON], kafkaIntegration, producers, onProducerActivate, onProducerDeactivate, onAircraftSelect }) => {
+const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON], kafkaIntegration, producers, selectedProducerId, onProducerActivate, onProducerDeactivate, onAircraftSelect }) => {
   const [aircraft, setAircraft] = useState([]); // Array to store aircraft objects from Kafka canvas
   const [selectedAircraftId, setSelectedAircraftId] = useState(null);
   const [useOSRM, setUseOSRM] = useState(true);
@@ -71,6 +71,13 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
       }
     }
   }, [selectedAircraftId]);
+
+  // Sync map selection with canvas selection for producer/aircraft nodes (when selecting from canvas)
+  useEffect(() => {
+    if (selectedProducerId && selectedProducerId !== selectedAircraftId) {
+      setSelectedAircraftId(selectedProducerId);
+    }
+  }, [selectedProducerId, selectedAircraftId]);
 
   // Add aircraft information from Kafka canvas producers into aircraft array
   useEffect(() => {

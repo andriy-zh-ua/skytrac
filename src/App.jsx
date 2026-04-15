@@ -168,7 +168,7 @@ const App = () => {
         newCurrentObjects.broker = currentObjects.broker;
       }
       
-      setCurrentObjects(newCurrentObjects);
+    setCurrentObjects(newCurrentObjects);
       
       return nds.map((node) =>
         node.id === nodeId || 
@@ -498,6 +498,7 @@ const calculateConsumerPosition = (nodes) => {
               initialCenter={[45.4215, -75.6972]} // Ottawa/Gatineau area
               kafkaIntegration={kafkaIntegration}
               producers={nodes.filter(node => node.type === 'producer')}
+              selectedProducerId={currentObjects.producer}
               onProducerActivate={handleProducerActivate}
               onProducerDeactivate={handleProducerDeactivate}
               onAircraftSelect={handleAircraftSelect}
