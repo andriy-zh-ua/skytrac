@@ -9,6 +9,7 @@ import { useNodesState, useEdgesState, addEdge } from '@xyflow/react';
 // Custom node components
 import { KafkaCanvas } from './components/KafkaCanvas/KafkaCanvas.jsx';
 import CustomAppBar from './components/AppBar.jsx';
+import FlightRouteMap from './components/FlightRoute';
 
 // Import Kafka Canvas Integration
 import { KafkaCanvasIntegration } from './kafka-designer/CanvasIntegration.js';
@@ -17,6 +18,14 @@ import { KafkaCanvasIntegration } from './kafka-designer/CanvasIntegration.js';
 import { ANIMATION_CONFIG } from './config/animationConfig.js';
 
 const App = () => {
+  // Flight route state
+  const [flightRoute, setFlightRoute] = useState({
+    start: null,
+    destination: null,
+    fullRoute: [],
+    stepCoordinates: []
+  });
+
   // Kafka Canvas Integration
   const [kafkaIntegration] = useState(() => new KafkaCanvasIntegration());
 
@@ -40,6 +49,12 @@ const App = () => {
   useEffect(() => {
     document.documentElement.style.setProperty('--producer-animation-speed', `${animationSpeed}ms`);
   }, [animationSpeed]);
+
+  // Handle flight route updates
+  const handleRouteUpdate = useCallback((routeData) => {
+    setFlightRoute(routeData);
+    console.log('Flight route updated:', routeData);
+  }, []);
 
   // Handle new connections between nodes
   const onConnect = useCallback(
@@ -70,7 +85,7 @@ const App = () => {
       
       setEdges(newEdges);
     },
-    [setEdges, setNodes, nodes]
+    [setEdges, setNodes, nodes, edges]
   );
 
   // Update edge styles based on producer state
@@ -444,20 +459,48 @@ const calculateConsumerPosition = (nodes) => {
           hasBrokers={nodes.filter(node => node.type === 'broker').length > 0}
           onExportSchema={exportSchema}
         />
-        {/* React Flow Canvas */}
-        <KafkaCanvas
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          selectNode={selectNode}
-          clearSelection={clearSelection}
-          onDuplicateTopic={handleDuplicateTopic}
-          currentObjects={currentObjects}
-          kafkaIntegration={kafkaIntegration}
-          updateEdgeStyles={updateEdgeStyles}
-        />
+        
+        {/* Split-screen layout */}
+        <Box sx={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'row',
+          overflow: 'hidden'
+        }}>
+          {/* Flight Route Map - Left Side */}
+          <Box sx={{ 
+            width: '50%', 
+            height: '100%', 
+            borderRight: '1px solid #ddd',
+            position: 'relative'
+          }}>
+            <FlightRouteMap 
+              onRouteUpdate={handleRouteUpdate}
+              initialCenter={[45.4215, -75.6972]} // Ottawa/Gatineau area
+              kafkaIntegration={kafkaIntegration}
+            />
+          </Box>
+          
+          {/* Kafka Canvas - Right Side */}
+          <Box sx={{ 
+            width: '50%', 
+            height: '100%'
+          }}>
+            <KafkaCanvas
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              selectNode={selectNode}
+              clearSelection={clearSelection}
+              onDuplicateTopic={handleDuplicateTopic}
+              currentObjects={currentObjects}
+              kafkaIntegration={kafkaIntegration}
+              updateEdgeStyles={updateEdgeStyles}
+            />
+          </Box>
+        </Box>
       </Box>
     </ReactFlowProvider>
   );

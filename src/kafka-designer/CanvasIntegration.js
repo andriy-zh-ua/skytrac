@@ -222,6 +222,9 @@ export class KafkaCanvasIntegration {
         // For visualization, we'll just remove it from the nodes
         this.nodes = this.nodes.filter(n => n.id !== nodeId);
         break;
+      default:
+        console.warn(`Unknown node type: ${nodeType}`);
+        break;
     }
     
     this.updateCanvas();

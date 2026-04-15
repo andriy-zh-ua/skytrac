@@ -261,7 +261,7 @@ export const KafkaCanvas = ({
         onNodesChange(clearHighlights);
       }
     }
-  }, [getIntersectingNodes, onNodesChange, nodes/*, selectNode, kafkaIntegration*/]);
+  }, [getIntersectingNodes, onNodesChange, nodes, selectNode, kafkaIntegration]);
   
   // Enhanced NodeTypes with injected functions
   const EnhancedNodeTypes = useCallback(() => ({
@@ -306,7 +306,7 @@ export const KafkaCanvas = ({
     ),
   }), [selectNode, currentObjects, hasProducerConnections, activateProducer, deactivateProducer, onDuplicateTopic])();
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box sx={{ flexGrow: 1, height: '100%' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}

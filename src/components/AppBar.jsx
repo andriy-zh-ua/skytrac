@@ -1,12 +1,14 @@
-import { AppBar, Toolbar, Button, Typography, Box } from '@mui/material';
+import { AppBar, Toolbar, Button, Typography } from '@mui/material';
 
-const CustomAppBar = ({ onAddNode, hasBrokers, onExportSchema/*, kafkaStats */}) => {
+const CustomAppBar = ({ onAddNode, hasBrokers, onExportSchema, /*, kafkaStats */}) => {
   return (
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Kafka Architecture Builder
+          Skytrac - Flight Routes & Kafka Architecture
         </Typography>
+        
+        {/* Kafka Controls */}
         <Button color="inherit" onClick={() => onAddNode('producer')}>
           Add Producer
         </Button>
