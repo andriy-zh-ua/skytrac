@@ -4,18 +4,9 @@ import L from 'leaflet';
 
 const AIRCRAFT_ICON = L.divIcon({
   className: 'single-aircraft-icon',
-  html: ' Aircraft ',
-  iconSize: [60, 20],
-  iconAnchor: [30, 10],
-  style: {
-    fontSize: '16px',
-    fontWeight: 'bold',
-    color: '#1976d2',
-    backgroundColor: 'white',
-    border: '2px solid #1976d2',
-    borderRadius: '4px',
-    padding: '2px'
-  }
+  html: '<div style="font-size:48px;font-weight:bold;color:#1976d2;">&#x2708;</div>',
+  iconSize: [60, 45],
+  iconAnchor: [30, 22]
 });
 
 const AircraftMarker = ({ position, onDragEnd }) => {
