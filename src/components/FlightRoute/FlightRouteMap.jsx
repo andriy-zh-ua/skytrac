@@ -525,6 +525,43 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
             Steps: {selectedAircraft.stepCoordinates.length} points
           </Typography>
         )}
+
+        {/* Aircraft Records Section */}
+        {aircraft.length > 0 && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2" sx={{ fontSize: '12px', fontWeight: 'bold', mb: 1 }}>
+              Aircraft Records ({aircraft.length})
+            </Typography>
+            <Box sx={{ maxHeight: '150px', overflowY: 'auto' }}>
+              {aircraft.map((ac) => (
+                <Box 
+                  key={ac.id}
+                  sx={{ 
+                    mb: 1, 
+                    p: 1, 
+                    border: ac.id === selectedAircraftId ? '1px solid #d32f2f' : '1px solid #e0e0e0',
+                    borderRadius: 1,
+                    backgroundColor: ac.id === selectedAircraftId ? 'rgba(211, 47, 47, 0.1)' : 'transparent'
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontSize: '10px', fontWeight: 'bold' }}>
+                    {ac.id}
+                    {ac.id === selectedAircraftId && ' (Selected)'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '9px', color: '#666' }}>
+                    Position: {ac.startPoint ? `${ac.startPoint.lat.toFixed(4)}, ${ac.startPoint.lng.toFixed(4)}` : 'N/A'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '9px', color: '#666' }}>
+                    Destination: {ac.destinationPoint ? `${ac.destinationPoint.lat.toFixed(4)}, ${ac.destinationPoint.lng.toFixed(4)}` : 'Not set'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '9px', color: '#666' }}>
+                    Route Steps: {ac.stepCoordinates.length}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
       </Paper>
     </Box>
   );
