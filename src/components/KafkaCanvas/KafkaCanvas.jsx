@@ -166,9 +166,17 @@ export const KafkaCanvas = ({
     }
   }, [getIntersectingNodes, onNodesChange, nodes]);
 
-  // Handle node drag stop to embed topic into broker
+  // Handle node drag stop to embed topic into broker and select producers
   const handleNodeDragStop = useCallback((event, node) => {
-    // Only care about topic nodes being dropped
+    // For producers, ensure they are properly selected and trigger map sync
+    if (node.type === 'producer' && selectNode) {
+      // Always call selectNode to ensure currentObjects is updated and map sync triggers
+      selectNode(node.id);
+      // Don't need to continue with intersection logic for producers
+      return;
+    }
+    
+    // Only care about topic nodes being dropped for embedding logic
     if (node.type !== 'topic') {
       return;
     }
