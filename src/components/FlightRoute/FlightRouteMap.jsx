@@ -452,7 +452,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
           : ac
       )
     );
-  }, [selectedAircraft?.id, calculateBearing]);
+  }, [selectedAircraft?.id, selectedAircraft?.destinationPoint, calculateBearing]);
 
   // Get simulation state
   // const getSimulationState = useCallback(() => ({
