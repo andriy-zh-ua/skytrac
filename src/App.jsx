@@ -48,6 +48,26 @@ const App = () => {
     console.log('Flight route updated:', routeData);
   }, []);
 
+  // Handle producer activation - start flight route streaming
+  const handleProducerActivate = useCallback((producerId) => {
+    // Find the producer node and start streaming if route data exists
+    const producerNode = nodes.find(node => node.id === producerId);
+    if (producerNode && window.getFlightState) {
+      const flightState = window.getFlightState();
+      if (flightState && flightState.stepCoordinates && flightState.stepCoordinates.length > 0) {
+        // Start streaming the flight route
+        console.log('Starting flight route streaming for producer:', producerId);
+        // The streaming will be handled by the FlightRouteKafkaProducer hook
+      }
+    }
+  }, [nodes]);
+
+  // Handle producer deactivation - stop flight route streaming
+  const handleProducerDeactivate = useCallback((producerId) => {
+    console.log('Stopping flight route streaming for producer:', producerId);
+    // The streaming stop will be handled by the FlightRouteKafkaProducer hook
+  }, []);
+
   // Handle new connections between nodes
   const onConnect = useCallback(
     (params) => {
@@ -471,6 +491,8 @@ const calculateConsumerPosition = (nodes) => {
               initialCenter={[45.4215, -75.6972]} // Ottawa/Gatineau area
               kafkaIntegration={kafkaIntegration}
               producers={nodes.filter(node => node.type === 'producer')}
+              onProducerActivate={handleProducerActivate}
+              onProducerDeactivate={handleProducerDeactivate}
             />
           </Box>
           
@@ -491,6 +513,8 @@ const calculateConsumerPosition = (nodes) => {
               currentObjects={currentObjects}
               kafkaIntegration={kafkaIntegration}
               updateEdgeStyles={updateEdgeStyles}
+              onProducerActivate={handleProducerActivate}
+              onProducerDeactivate={handleProducerDeactivate}
             />
           </Box>
         </Box>

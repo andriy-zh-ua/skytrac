@@ -68,7 +68,7 @@ function MapZoomTracker({ onZoomChange }) {
   return null;
 }
 
-const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], kafkaIntegration, producers }) => {
+const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], kafkaIntegration, producers, onProducerActivate, onProducerDeactivate }) => {
   const [startPoint, setStartPoint] = useState(null);
   const [destinationPoint, setDestinationPoint] = useState(null);
   const [stepCoordinates, setStepCoordinates] = useState([]);
@@ -416,55 +416,9 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         </Box>
 
         {stepCoordinates.length > 0 && (
-          <>
-            <Typography variant="body2" sx={{ mt: 2 }}>
-              Steps: {stepCoordinates.length} points
-            </Typography>
-
-            {/* Kafka Streaming Controls */}
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Kafka Streaming
-              </Typography>
-              
-              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={kafkaProducer.startStreaming}
-                  disabled={kafkaProducer.isStreaming || stepCoordinates.length === 0}
-                  color="success"
-                >
-                  Start Stream
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={kafkaProducer.stopStreaming}
-                  disabled={!kafkaProducer.isStreaming}
-                  color="error"
-                >
-                  Stop Stream
-                </Button>
-              </Box>
-
-              {kafkaProducer.isStreaming && (
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    Streaming: Step {kafkaProducer.currentStep} / {kafkaProducer.totalSteps}
-                  </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={kafkaProducer.streamingProgress}
-                    sx={{ mb: 1 }}
-                  />
-                  <Typography variant="caption" color="success.main">
-                    Broadcasting to Kafka topic: flight-routes
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          </>
+          <Typography variant="body2" sx={{ mt: 2 }}>
+            Steps: {stepCoordinates.length} points
+          </Typography>
         )}
       </Paper>
     </Box>

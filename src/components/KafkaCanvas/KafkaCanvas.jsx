@@ -16,7 +16,9 @@ export const KafkaCanvas = ({
   onDuplicateTopic,
   currentObjects,
   kafkaIntegration,
-  updateEdgeStyles
+  updateEdgeStyles,
+  onProducerActivate,
+  onProducerDeactivate
 }) => {
   const { getIntersectingNodes } = useReactFlow();
 
@@ -50,8 +52,13 @@ export const KafkaCanvas = ({
       if (updateEdgeStyles) {
         updateEdgeStyles(producerId, true);
       }
+      
+      // Trigger flight route streaming
+      if (onProducerActivate) {
+        onProducerActivate(producerId);
+      }
     }
-  }, [nodes, onNodesChange, updateEdgeStyles]);
+  }, [nodes, onNodesChange, updateEdgeStyles, onProducerActivate]);
 
   // Deactivate producer
   const deactivateProducer = useCallback((producerId) => {
@@ -78,8 +85,13 @@ export const KafkaCanvas = ({
       if (updateEdgeStyles) {
         updateEdgeStyles(producerId, false);
       }
+      
+      // Stop flight route streaming
+      if (onProducerDeactivate) {
+        onProducerDeactivate(producerId);
+      }
     }
-  }, [nodes, onNodesChange, updateEdgeStyles]);
+  }, [nodes, onNodesChange, updateEdgeStyles, onProducerDeactivate]);
   
   // Calculate position for new topic - same as regular topic addition
   const calculateTopicPosition = (nodes, brokerId) => {
