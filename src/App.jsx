@@ -397,6 +397,7 @@ const calculateConsumerPosition = (nodes) => {
       
       // Update React Flow nodes and edges from KafkaIntegration
       setNodes(kafkaResult.nodes);
+      
       // Preserve existing manual edges while adding new ones from KafkaIntegration
       setEdges((currentEdges) => {
         const existingEdgeIds = new Set(currentEdges.map(e => `${e.source}-${e.target}`));
@@ -409,6 +410,7 @@ const calculateConsumerPosition = (nodes) => {
       // Select the newly added producer
       const newProducerId = kafkaResult.producer.id;
       selectNode(newProducerId);
+
     } else if (type === 'consumer') {
       // Calculate position for new consumer
       const position = calculateConsumerPosition(nodes);

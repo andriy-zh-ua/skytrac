@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 'react-leaflet';
 import { Box, Paper, Typography, Slider } from '@mui/material';
 import L from 'leaflet';
@@ -6,13 +6,9 @@ import 'leaflet/dist/leaflet.css';
 import FlightRouteKafkaProducer from './FlightRouteKafkaProducer';
 import AircraftMarker from './AircraftMarker';
 
-// Fix for default markers in webpack - ensure clean state
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
+// Ottawa International Airport coordinates: 45.3225° N, 75.6672° W
+const OTTAWA_AIRPORT_LAT = 45.3225;
+const OTTAWA_AIRPORT_LON = -75.6672;
 
 const DEST_ICON = L.icon({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
@@ -52,15 +48,28 @@ function MapZoomTracker({ onZoomChange }) {
   return null;
 }
 
-const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], kafkaIntegration, producers, onProducerActivate, onProducerDeactivate }) => {
-  const [startPoint, setStartPoint] = useState(null);
-  const [destinationPoint, setDestinationPoint] = useState(null);
-  const [stepCoordinates, setStepCoordinates] = useState([]);
+const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON], kafkaIntegration, producers, onProducerActivate, onProducerDeactivate }) => {
+  const [aircraft, setAircraft] = useState([]); // Array to store aircraft objects from Kafka canvas
+  const [selectedAircraftId, setSelectedAircraftId] = useState(null);
   const [useOSRM, setUseOSRM] = useState(true);
   const [stepDistance, setStepDistance] = useState(200); // meters
-  const [aircraftRotation, setAircraftRotation] = useState(0); // degrees
   const [useGreatCircle, setUseGreatCircle] = useState(true); // Earth curvature
   const [mapZoom, setMapZoom] = useState(10); // Track map zoom level
+
+  // Add aircraft information from Kafka canvas producers into aircraft array
+  useEffect(() => {
+    if (producers && producers.length > 0) {
+      const newAircraft = producers.map(producer => ({
+        id: producer.id,
+        startPoint: L.latLng(OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON),
+        destinationPoint: null,
+        stepCoordinates: [],
+        aircraftRotation: 0
+      }));
+       
+      setAircraft(newAircraft);
+    }
+  }, [producers]);
 
   // Calculate responsive stroke width based on zoom level
   const getStrokeWidth = useCallback((zoom) => {
@@ -91,11 +100,25 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
     return (bearing + 360) % 360;
   }, []);
 
-  // Route data for Kafka streaming
+  // // Route data for Kafka streaming
+  // const routeData = {
+  //   start: startPoint ? { lat: startPoint.lat, lon: startPoint.lng } : null,
+  //   destination: destinationPoint ? { lat: destinationPoint.lat, lon: destinationPoint.lng } : null,
+  //   stepCoordinates: stepCoordinates || []
+  // };
+  // Route data for Kafka streaming - based on selected aircraft
+  const selectedAircraft = aircraft.find(a => a.id === selectedAircraftId);
+
   const routeData = {
-    start: startPoint ? { lat: startPoint.lat, lon: startPoint.lng } : null,
-    destination: destinationPoint ? { lat: destinationPoint.lat, lon: destinationPoint.lng } : null,
-    stepCoordinates: stepCoordinates || []
+    start: selectedAircraft?.startPoint 
+      ? { lat: selectedAircraft.startPoint.lat, lon: selectedAircraft.startPoint.lng } 
+      : null,
+      
+    destination: selectedAircraft?.destinationPoint 
+      ? { lat: selectedAircraft.destinationPoint.lat, lon: selectedAircraft.destinationPoint.lng } 
+      : null,
+      
+    stepCoordinates: selectedAircraft?.stepCoordinates || []
   };
 
   // Kafka producer hook
@@ -226,15 +249,17 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
     return steps;
   }, [haversineDistance]);
 
-  // Generate route
   const generateRoute = useCallback(async () => {
-    if (!startPoint || !destinationPoint) return;
+    if (!selectedAircraft || !selectedAircraft.destinationPoint) return;
+
+    const start = selectedAircraft.startPoint;
+    const end = selectedAircraft.destinationPoint;
 
     let routeCoords = [];
 
     try {
       if (useOSRM) {
-        routeCoords = await getOSRMRoute(startPoint, destinationPoint);
+        routeCoords = await getOSRMRoute(start, end);
       }
     } catch (err) {
       console.warn('OSRM failed, using great circle fallback', err);
@@ -242,75 +267,155 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
 
     if (routeCoords.length === 0) {
       if (useGreatCircle) {
-        routeCoords = getGreatCircleRoute(startPoint, destinationPoint, 50);
+        routeCoords = getGreatCircleRoute(start, end, 50);
       } else {
-        routeCoords = getStraightLineRoute(startPoint, destinationPoint, 50);
+        routeCoords = getStraightLineRoute(start, end, 50);
       }
     }
 
-    // Process directly into small simulation steps
     const steps = resampleRoute(routeCoords, stepDistance);
-    setStepCoordinates(steps);
 
-    // Notify parent component
+    // Update the specific aircraft
+    setAircraft(prev =>
+      prev.map(ac =>
+        ac.id === selectedAircraft.id
+          ? { ...ac, stepCoordinates: steps }
+          : ac
+      )
+    );
+
     onRouteUpdate({
-      start: { lat: startPoint.lat, lon: startPoint.lng },
-      destination: { lat: destinationPoint.lat, lon: destinationPoint.lng },
+      start: { lat: start.lat, lon: start.lng },
+      destination: { lat: end.lat, lon: end.lng },
       stepCoordinates: steps
     });
-  }, [startPoint, destinationPoint, useOSRM, stepDistance, getOSRMRoute, getStraightLineRoute, resampleRoute, onRouteUpdate]);
+  }, [selectedAircraft, useOSRM, stepDistance, getOSRMRoute, getGreatCircleRoute, getStraightLineRoute, resampleRoute, onRouteUpdate]);
+  // Generate route
+  // const generateRoute = useCallback(async () => {
+  //   if (!startPoint || !destinationPoint) return;
+
+  //   let routeCoords = [];
+
+  //   try {
+  //     if (useOSRM) {
+  //       routeCoords = await getOSRMRoute(startPoint, destinationPoint);
+  //     }
+  //   } catch (err) {
+  //     console.warn('OSRM failed, using great circle fallback', err);
+  //   }
+
+  //   if (routeCoords.length === 0) {
+  //     if (useGreatCircle) {
+  //       routeCoords = getGreatCircleRoute(startPoint, destinationPoint, 50);
+  //     } else {
+  //       routeCoords = getStraightLineRoute(startPoint, destinationPoint, 50);
+  //     }
+  //   }
+
+  //   // Process directly into small simulation steps
+  //   const steps = resampleRoute(routeCoords, stepDistance);
+  //   setStepCoordinates(steps);
+
+  //   // Notify parent component
+  //   onRouteUpdate({
+  //     start: { lat: startPoint.lat, lon: startPoint.lng },
+  //     destination: { lat: destinationPoint.lat, lon: destinationPoint.lng },
+  //     stepCoordinates: steps
+  //   });
+  // }, [startPoint, destinationPoint, useOSRM, stepDistance, getOSRMRoute, getStraightLineRoute, resampleRoute, onRouteUpdate]);
 
   // Handle map click for destination only (aircraft placed by producer creation)
+  // const handleMapClick = useCallback((latlng) => {
+  //   if (startPoint) {
+  //     // Only set destination if aircraft exists
+  //     setDestinationPoint(latlng);
+  //   }
+  // }, [startPoint]);
   const handleMapClick = useCallback((latlng) => {
-    if (startPoint) {
-      // Only set destination if aircraft exists
-      setDestinationPoint(latlng);
-    }
-  }, [startPoint]);
+    if (!selectedAircraftId) return;
+
+    setAircraft(prev =>
+      prev.map(ac =>
+        ac.id === selectedAircraftId
+          ? { ...ac, destinationPoint: latlng }
+          : ac
+      )
+    );
+  }, [selectedAircraftId]);
 
   // Handle aircraft drag end
-  const handleAircraftDragEnd = useCallback((e) => {
-    const marker = e.target;
-    const position = marker.getLatLng();
-    setStartPoint(position);
+  const handleAircraftDragEnd = useCallback((e, aircraftId) => {   // ← add aircraftId parameter
+    const position = e.target.getLatLng();
+
+    setAircraft(prev =>
+      prev.map(ac =>
+        ac.id === aircraftId
+          ? { ...ac, startPoint: position }
+          : ac
+      )
+    );
   }, []);
 
-  // Auto-generate route when both points are set
+  // Auto-generate route when selected aircraft has both start and destination
   useEffect(() => {
-    if (startPoint && destinationPoint) {
+    if (selectedAircraft?.startPoint && selectedAircraft?.destinationPoint) {
       generateRoute();
     }
-  }, [startPoint, destinationPoint, generateRoute]);
+  }, [selectedAircraft, generateRoute]);
 
   // Update aircraft rotation when destination is set
   useEffect(() => {
-    if (startPoint && destinationPoint) {
-      const bearing = calculateBearing(
-        startPoint.lat, 
-        startPoint.lng, 
-        destinationPoint.lat, 
-        destinationPoint.lng
-      );
-      setAircraftRotation(bearing);
-    }
-  }, [startPoint, destinationPoint, calculateBearing]);
+    if (!selectedAircraft || !selectedAircraft.destinationPoint) return;
 
-  // Auto-place aircraft when producer is created in Kafka schema
+    const bearing = calculateBearing(
+      selectedAircraft.startPoint.lat,
+      selectedAircraft.startPoint.lng,
+      selectedAircraft.destinationPoint.lat,
+      selectedAircraft.destinationPoint.lng
+    );
+
+    setAircraft(prev =>
+      prev.map(ac =>
+        ac.id === selectedAircraft.id
+          ? { ...ac, aircraftRotation: bearing }
+          : ac
+      )
+    );
+  }, [selectedAircraft?.id, calculateBearing]);
+
+  // Auto-select and place aircraft when producers change
   useEffect(() => {
-    if (producers && producers.length > 0 && !startPoint) {
-      // Place aircraft above Ottawa International Airport when first producer is created
-      // Ottawa International Airport coordinates: 45.3225° N, 75.6672° W
-      const airportCoords = [45.3225, -75.6672];
-      setStartPoint(L.latLng(airportCoords[0], airportCoords[1]));
+    if (producers && producers.length > 0) {
+      const newAircraftList = producers.map(producer => ({
+        id: producer.id,
+        startPoint: L.latLng(OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON),
+        destinationPoint: null,
+        stepCoordinates: [],
+        aircraftRotation: 0
+      }));
+
+      setAircraft(newAircraftList);
+
+      if (newAircraftList.length > 0) {
+        setSelectedAircraftId(newAircraftList[newAircraftList.length - 1].id);
+      }
     }
-  }, [producers, startPoint]);
+  }, [producers]);
 
   // Get simulation state
-  const getSimulationState = useCallback(() => ({
-    start: startPoint ? { lat: startPoint.lat, lon: startPoint.lng } : null,
-    destination: destinationPoint ? { lat: destinationPoint.lat, lon: destinationPoint.lng } : null,
-    stepCoordinates
-  }), [startPoint, destinationPoint, stepCoordinates]);
+  // const getSimulationState = useCallback(() => ({
+  //   start: startPoint ? { lat: startPoint.lat, lon: startPoint.lng } : null,
+  //   destination: destinationPoint ? { lat: destinationPoint.lat, lon: destinationPoint.lng } : null,
+  //   stepCoordinates
+  // }), [startPoint, destinationPoint, stepCoordinates]);
+  const getSimulationState = useCallback(() => {
+    const ac = selectedAircraft;
+    return {
+      start: ac?.startPoint ? { lat: ac.startPoint.lat, lon: ac.startPoint.lng } : null,
+      destination: ac?.destinationPoint ? { lat: ac.destinationPoint.lat, lon: ac.destinationPoint.lng } : null,
+      stepCoordinates: ac?.stepCoordinates || []
+    };
+  }, [selectedAircraft]);
 
   // Expose state to parent
   useEffect(() => {
@@ -326,37 +431,43 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         
         <MapClickHandler onMapClick={handleMapClick} />
         <MapZoomTracker onZoomChange={setMapZoom} />
 
-        {/* Aircraft (draggable start point) */}
-        <AircraftMarker 
-          position={startPoint}
-          onDragEnd={handleAircraftDragEnd}
-          rotation={aircraftRotation}
-        />
-
-        {/* Destination marker */}
-        {destinationPoint && (
-          <Marker
-            key="destination-marker"
-            position={destinationPoint}
-            icon={DEST_ICON}
+        {aircraft.map((ac) => (
+          <AircraftMarker 
+            key={ac.id}
+            position={ac.startPoint}
+            onDragEnd={(e) => handleAircraftDragEnd(e, ac.id)}
+            rotation={ac.aircraftRotation}
+            selected={ac.id === selectedAircraftId}
           />
+        ))}
+
+        {aircraft.map((ac) => 
+          ac.destinationPoint && (
+            <Marker
+              key={`dest-${ac.id}`}
+              position={ac.destinationPoint}
+              icon={DEST_ICON}
+            />
+          )
         )}
 
-        {/* Route polyline */}
-        {stepCoordinates.length > 0 && (
-          <Polyline
-            positions={stepCoordinates.map(p => [p.lat, p.lon])}
-            color="blue"
-            weight={getStrokeWidth(mapZoom)}
-            opacity={0.8}
-          />
+        {aircraft.map((ac) => 
+          ac.stepCoordinates.length > 0 && (
+            <Polyline
+              key={`route-${ac.id}`}
+              positions={ac.stepCoordinates.map(p => [p.lat, p.lon])}
+              color={ac.id === selectedAircraftId ? "blue" : "gray"}
+              weight={getStrokeWidth(mapZoom)}
+              opacity={ac.id === selectedAircraftId ? 0.9 : 0.5}
+            />
+          )
         )}
       </MapContainer>
 
@@ -384,7 +495,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
           4. Drag aircraft to adjust start point
         </Typography>
 
-        
         <Box sx={{ mt: 2 }}>
           <Typography variant="body2" gutterBottom sx={{ fontSize: '11px' }}>
             Step Distance: {stepDistance}m
@@ -399,9 +509,9 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [45.4215, -75.6972], ka
           />
         </Box>
 
-        {stepCoordinates.length > 0 && (
+        {selectedAircraft?.stepCoordinates.length > 0 && (
           <Typography variant="body2" sx={{ mt: 2, fontSize: '11px' }}>
-            Steps: {stepCoordinates.length} points
+            Steps: {selectedAircraft.stepCoordinates.length} points
           </Typography>
         )}
       </Paper>
