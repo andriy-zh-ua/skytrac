@@ -181,6 +181,11 @@ const App = () => {
     });
   };
 
+  // Handle aircraft selection from FlightRouteMap
+  const handleAircraftSelect = useCallback((producerId) => {
+    selectNode(producerId);
+  }, [selectNode]);
+
   const clearSelection = () => {
     // Clear all node selections
     setNodes((nds) => 
@@ -495,6 +500,7 @@ const calculateConsumerPosition = (nodes) => {
               producers={nodes.filter(node => node.type === 'producer')}
               onProducerActivate={handleProducerActivate}
               onProducerDeactivate={handleProducerDeactivate}
+              onAircraftSelect={handleAircraftSelect}
             />
           </Box>
           

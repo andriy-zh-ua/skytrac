@@ -48,7 +48,7 @@ function MapZoomTracker({ onZoomChange }) {
   return null;
 }
 
-const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON], kafkaIntegration, producers, onProducerActivate, onProducerDeactivate }) => {
+const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON], kafkaIntegration, producers, onProducerActivate, onProducerDeactivate, onAircraftSelect }) => {
   const [aircraft, setAircraft] = useState([]); // Array to store aircraft objects from Kafka canvas
   const [selectedAircraftId, setSelectedAircraftId] = useState(null);
   const [useOSRM, setUseOSRM] = useState(true);
@@ -131,12 +131,22 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     );
 
     setSelectedAircraftId(aircraftId);
-  }, []);
+
+    // Notify canvas of selection change
+    if (onAircraftSelect) {
+      onAircraftSelect(aircraftId);
+    }
+  }, [onAircraftSelect]);
 
   // Handle aircraft click to select aircraft
   const handleAircraftClick = useCallback((aircraftId) => {
     setSelectedAircraftId(aircraftId);
-  }, []);
+    
+    // Notify canvas of selection change
+    if (onAircraftSelect) {
+      onAircraftSelect(aircraftId);
+    }
+  }, [onAircraftSelect]);
 
   // Calculate responsive stroke width based on zoom level
   const getStrokeWidth = useCallback((zoom) => {
