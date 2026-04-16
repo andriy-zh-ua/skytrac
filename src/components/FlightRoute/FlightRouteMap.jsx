@@ -134,6 +134,23 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     prevAircraftLengthRef.current = currentLength;
   }, [aircraft]);
 
+  // Calculate distance between two points
+  const calculateRouteDistance = useCallback(async (start, destination) => {
+    if (!start || !destination) {
+      console.log('Invalid coordinates for distance calculation:', { start, destination });
+      return 0;
+    }
+    
+    // Use timeout for distance calculation
+    const distance = await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(start.distanceTo(destination)); // in meters
+      }, 0);
+    });
+    
+    return distance;
+  }, []);
+
   // Handle aircraft drag end to update aircraft position
   const handleAircraftDragEnd = useCallback((e, aircraftId) => {
     const position = e.target.getLatLng();
@@ -318,11 +335,17 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     // Resample the route into small steps
     const steps = resampleRoute(routeCoords, stepDistance);
 
+    // Calculate route distance
+    const routeDistance = await calculateRouteDistance(start, end);
+    
+    // Round to 2 decimal places
+    const roundedDistance = Math.round(routeDistance * 100) / 100;
+
     // Update the specific aircraft
     setAircraft(prev =>
       prev.map(ac =>
         ac.id === selectedAircraft.id
-          ? { ...ac, stepCoordinates: steps }
+          ? { ...ac, stepCoordinates: steps, routeDistance: roundedDistance }
           : ac
       )
     );
@@ -330,9 +353,10 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     onRouteUpdate({
       start: { lat: start.lat, lon: start.lng },
       destination: { lat: end.lat, lon: end.lng },
-      stepCoordinates: steps
+      stepCoordinates: steps,
+      routeDistance: roundedDistance
     });
-  }, [selectedAircraft, stepDistance, getGreatCircleRoute, resampleRoute, onRouteUpdate]);
+  }, [selectedAircraft, stepDistance, getGreatCircleRoute, resampleRoute, onRouteUpdate, calculateRouteDistance]);
 
   const handleMapClick = useCallback((latlng) => {
     if (!selectedAircraftId) return;

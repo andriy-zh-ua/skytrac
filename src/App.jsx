@@ -17,7 +17,12 @@ import { KafkaCanvasIntegration } from './kafka-designer/CanvasIntegration.js';
 // Import animation configuration
 import { ANIMATION_CONFIG } from './config/animationConfig.js';
 
+// Import telemetry service
+import TelemetryService from './services/telemetryService.js';
+
 const App = () => {
+  // Initialize telemetry service
+  const [telemetryService] = useState(() => new TelemetryService());
   
   // Kafka Canvas Integration
   const [kafkaIntegration] = useState(() => new KafkaCanvasIntegration());
@@ -48,25 +53,65 @@ const App = () => {
     console.log('Flight route updated:', routeData);
   }, []);
 
-  // Handle producer activation - start flight route streaming
-  const handleProducerActivate = useCallback((producerId) => {
-    // Find the producer node and start streaming if route data exists
-    const producerNode = nodes.find(node => node.id === producerId);
-    if (producerNode && window.getFlightState) {
-      const flightState = window.getFlightState();
-      if (flightState && flightState.stepCoordinates && flightState.stepCoordinates.length > 0) {
-        // Start streaming the flight route
-        console.log('Starting flight route streaming for producer:', producerId);
-        // The streaming will be handled by the FlightRouteKafkaProducer hook
-      }
+  // Get partition ID from producer's connected topic
+  const getPartitionIdForProducer = useCallback((producerId) => {
+    // Find edges where this producer is the source
+    const producerEdges = edges.filter(edge => edge.source === producerId);
+    
+    if (producerEdges.length === 0) {
+      console.warn(`No connections found for producer ${producerId}`);
+      return null;
     }
-  }, [nodes]);
+    
+    // Get partition IDs directly from edge targets
+    const partitionIds = producerEdges.map(edge => edge.target);
+    
+    if (!partitionIds || partitionIds.length === 0) {
+      console.warn(`No partitions found for producer ${producerId}`);
+      return null;
+    }
 
-  // Handle producer deactivation - stop flight route streaming
-  const handleProducerDeactivate = useCallback((producerId) => {
-    console.log('Stopping flight route streaming for producer:', producerId);
-    // The streaming stop will be handled by the FlightRouteKafkaProducer hook
+    return partitionIds;
+  }, [edges, kafkaIntegration]);
+
+  // Get aircraft element associated with producerId
+  const getAircraftForProducer = useCallback((producerId) => {
+    if (!window.getFlightState) {
+      console.warn('getFlightState not available');
+      return null;
+    }
+
+    const flightState = window.getFlightState();
+    if (!flightState || !flightState.stepCoordinates || flightState.stepCoordinates.length === 0) {
+      console.warn('No flight route data available');
+      return null;
+    }
+
+    // The aircraft is associated with the producer via the flight state
+    // Return the flight state which contains the aircraft data
+    return {
+      start: flightState.start,
+      destination: flightState.destination,
+      stepCoordinates: flightState.stepCoordinates
+    };
   }, []);
+
+  // Handle producer activation - start telemetry transmission
+  const handleProducerActivate = useCallback((producerId) => {
+    const partitionIds = getPartitionIdForProducer(producerId);
+    const aircraft = getAircraftForProducer(producerId);
+
+    if (partitionIds && partitionIds.length > 0) {
+      telemetryService.startTelemetryTransmission(producerId, partitionIds, aircraft);
+    } else {
+      console.error(`Cannot activate producer ${producerId}: No partition found`);
+    }
+  }, [getPartitionIdForProducer, getAircraftForProducer, telemetryService]);
+
+  // Handle producer deactivation - stop telemetry transmission
+  const handleProducerDeactivate = useCallback((producerId) => {
+    telemetryService.stopTelemetryTransmission(producerId);
+  }, [telemetryService]);
 
   // Selection function - select one node, deselect others, and track current objects
   const selectNode = (nodeId, preserveBroker = false) => {

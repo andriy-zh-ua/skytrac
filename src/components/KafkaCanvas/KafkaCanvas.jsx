@@ -53,7 +53,7 @@ export const KafkaCanvas = ({
         updateEdgeStyles(producerId, true);
       }
       
-      // Trigger flight route streaming
+      // Trigger telemetry transmission
       if (onProducerActivate) {
         onProducerActivate(producerId);
       }
