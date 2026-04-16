@@ -10,6 +10,9 @@ import AircraftMarker from './AircraftMarker';
 const OTTAWA_AIRPORT_LAT = 45.3225;
 const OTTAWA_AIRPORT_LON = -75.6672;
 
+// Step distance constant for route generation
+const STEP_DISTANCE_METERS = 50;
+
 const DEST_ICON = L.icon({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
@@ -51,7 +54,6 @@ function MapZoomTracker({ onZoomChange }) {
 const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OTTAWA_AIRPORT_LON], kafkaIntegration, producers, selectedProducerId, onProducerActivate, onProducerDeactivate, onAircraftSelect }) => {
   const [aircraft, setAircraft] = useState([]); // Array to store aircraft objects from Kafka canvas
   const [selectedAircraftId, setSelectedAircraftId] = useState(null);
-  const [stepDistance, setStepDistance] = useState(200); // meters
   const [mapZoom, setMapZoom] = useState(10); // Track map zoom level
   const aircraftListRef = useRef(null); // Ref for scrollable aircraft list
   const prevAircraftLengthRef = useRef(0); // Track previous aircraft array length
@@ -76,17 +78,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
       setSelectedAircraftId(selectedProducerId);
     }
   }, [selectedProducerId, selectedAircraftId]);
-
-  // Recalculate routes for all aircraft when step distance changes
-  useEffect(() => {
-    // Regenerate routes for all aircraft that have destinations
-    aircraft.forEach(ac => {
-      if (ac.destinationPoint && ac.startPoint) {
-        // Trigger route regeneration for each aircraft
-        generateRouteForAircraft(ac);
-      }
-    });
-  }, [stepDistance]);
 
   // Add aircraft information from Kafka canvas producers into aircraft array
   useEffect(() => {
@@ -279,7 +270,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
   }, []);
 
   // Resample route into small steps
-  const resampleRoute = useCallback((route, targetDistanceMeters = 200) => {
+  const resampleRoute = useCallback((route, targetDistanceMeters = STEP_DISTANCE_METERS) => {
     if (route.length < 2) return route;
 
     const steps = [];
@@ -333,7 +324,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     const routeCoords = getGreatCircleRoute(start, end, 50);
 
     // Resample the route into small steps
-    const steps = resampleRoute(routeCoords, stepDistance);
+    const steps = resampleRoute(routeCoords);
 
     // Calculate route distance
     const routeDistance = await calculateRouteDistance(start, end);
@@ -356,7 +347,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
       stepCoordinates: steps,
       routeDistance: roundedDistance
     });
-  }, [selectedAircraft, stepDistance, getGreatCircleRoute, resampleRoute, onRouteUpdate, calculateRouteDistance]);
+  }, [selectedAircraft, getGreatCircleRoute, resampleRoute, onRouteUpdate, calculateRouteDistance]);
 
   const handleMapClick = useCallback((latlng) => {
     if (!selectedAircraftId) return;
@@ -369,39 +360,6 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
       )
     );
   }, [selectedAircraftId]);
-
-  // Generate route for a specific aircraft
-  const generateRouteForAircraft = useCallback(async (aircraft) => {
-    if (!aircraft.startPoint || !aircraft.destinationPoint) {
-      return;
-    }
-
-    const start = aircraft.startPoint;
-    const end = aircraft.destinationPoint;
-
-    try {
-      // Generate great circle route
-      const routeCoords = getGreatCircleRoute(start, end);
-      
-      // Resample the route into small steps
-      const steps = resampleRoute(routeCoords, stepDistance);
-
-      // Update the specific aircraft
-      setAircraft(prev =>
-        prev.map(ac =>
-          ac.id === aircraft.id
-            ? {
-                ...ac,
-                destination: { lat: end.lat, lon: end.lng },
-                stepCoordinates: steps
-              }
-            : ac
-        )
-      );
-    } catch (error) {
-      console.error('Route generation failed for aircraft', aircraft.id, error);
-    }
-  }, [stepDistance, getGreatCircleRoute, resampleRoute]);
 
   // Auto-generate route when selected aircraft has both start and destination
   useEffect(() => {
@@ -523,21 +481,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
           3. Route generates automatically<br />
           4. Drag aircraft to adjust start point
         </Typography>
-
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="body2" gutterBottom sx={{ fontSize: '11px' }}>
-            Step Distance: {stepDistance}m
-          </Typography>
-          <Slider
-            value={stepDistance}
-            onChange={(e, newValue) => setStepDistance(newValue)}
-            min={50}
-            max={500}
-            step={50}
-            size="small"
-          />
-        </Box>
-
+        
         {/* Aircraft Records Section */}
         {aircraft.length > 0 && (
           <Box sx={{ mt: 2 }}>
@@ -571,7 +515,7 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
                     Destination: {ac.destinationPoint ? `${ac.destinationPoint.lat.toFixed(4)}, ${ac.destinationPoint.lng.toFixed(4)}` : 'Not set'}
                   </Typography>
                   <Typography variant="body2" sx={{ fontSize: '9px', color: '#666' }}>
-                    Route Steps: {ac.stepCoordinates.length}
+                    Distance: {ac.routeDistance ? `${(ac.routeDistance / 1000).toFixed(1)} km` : 'N/A'}
                   </Typography>
                 </Box>
               ))}
