@@ -23,8 +23,7 @@ const FlightRouteKafkaProducer = ({ routeData, kafkaIntegration }) => {
       routeId: `route-${Date.now()}`,
       start: routeData.start,
       destination: routeData.destination,
-      totalSteps: routeData.stepCoordinates.length,
-      stepDistance: 200 // meters
+      totalSteps: routeData.stepCoordinates.length
     };
 
     // Send to Kafka (simulated through console for now)
@@ -60,16 +59,6 @@ const FlightRouteKafkaProducer = ({ routeData, kafkaIntegration }) => {
 
         // Send position data to Kafka
         console.log(`Kafka Producer - Flight Position Step ${nextStep}:`, flightData);
-        
-        // In real implementation:
-        // kafkaIntegration.producer.send({
-        //   topic: FLIGHT_TOPIC,
-        //   messages: [{
-        //     key: routeMetadata.routeId,
-        //     value: JSON.stringify(flightData),
-        //     timestamp: Date.now()
-        //   }]
-        // });
 
         return nextStep;
       });
