@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package skytrac.telemetry;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "a2solution.ca/skytrac/proto/telemetry";
+
+service FlightTelemetryService {
+  rpc SendAircraftTelemetry (AircraftTelemetry) returns (AircraftControlMessage);
+}
+
+// Telemetry message for aircraft data
+message AircraftTelemetry {
+  string aircraft_id = 1;                   // unique aircraft identifier
+  FlightState state = 2;                    // flight state
+  google.protobuf.Timestamp event_time = 3; // when this telemetry was generated (not received)
+  string telemetry_id = 4;                  // unique telemetry identifier 
+  int64 sequence_number = 5;                // sequence number for ordering
+}
+
+// Control message from server to client
+message AircraftControlMessage {
+  string message_id = 1;
+  google.protobuf.Timestamp event_time = 2; // when this control message was generated (not received)
+  string correlation_id = 3;                // correlation with telemetry message id
+
+  oneof payload {
+    FlightCommand command = 4;
+    NoOp noop = 5;
+  }
+}
+
+// Main telemetry data structure
+message FlightState {
+  float altitude = 1;               // meters
+  float speed = 2;                  // km/h
+  GeoPosition position = 3;         // current position (latitude, longitude)
+  float bearing = 4;                // degrees of heading
+
+  FuelStatus fuel_status = 5;       // fuel status (FUEL_STATUS_UNKNOWN, FUEL_STATUS_NORMAL, FUEL_STATUS_LOW, FUEL_STATUS_CRITICAL)
+  AircraftState aircraft_state = 6; // aircraft state (AIRCRAFT_STATE_UNKNOWN, AIRCRAFT_STATE_GROUNDED, AIRCRAFT_STATE_TAXIING, AIRCRAFT_STATE_TAKEOFF, AIRCRAFT_STATE_CLIMBING, AIRCRAFT_STATE_CRUISING, AIRCRAFT_STATE_DESCENDING, AIRCRAFT_STATE_APPROACH, AIRCRAFT_STATE_LANDING, AIRCRAFT_STATE_LANDED)
+
+  bool maintenance_required = 7;    // maintenance required flag (true/false)
+
+  int32 progress_percentage = 8;    // percentage of flight completed
+  int32 segment_index = 9;          // current segment index
+  int32 time_elapsed = 10;          // seconds
+
+  bool flight_completed = 11;       // flight completed flag (true/false)
+
+  float distance_traveled = 12;     // meters
+  float remaining_distance = 13;    // meters
+
+  optional EnvironmentalData environment_data = 14; // environmental data (pressure, humidity, temperature)
+}
+
+// Environmental data
+message EnvironmentalData {
+  float pressure = 1;
+  float humidity = 2;
+  float temperature = 3;
+}
+
+// Geographic position
+message GeoPosition {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+// Flight command
+message FlightCommand {
+  CommandType type = 1;
+  CommandPriority priority = 2;
+  string message = 3;
+
+  optional float target_altitude = 4; // meters
+  optional float target_speed = 5;    // km/h
+  optional float target_bearing = 6;  // degrees
+
+  string command_id = 7;
+}
+
+// Empty message representing "do nothing"
+message NoOp {}
+
+enum CommandType {
+  COMMAND_TYPE_UNKNOWN = 0;
+  COMMAND_TYPE_CHANGE_ALTITUDE = 1;
+  COMMAND_TYPE_CHANGE_SPEED = 2;
+  COMMAND_TYPE_CHANGE_HEADING = 3;
+  COMMAND_TYPE_HOLD_POSITION = 4;
+  COMMAND_TYPE_RETURN_TO_BASE = 5;
+  COMMAND_TYPE_LAND_IMMEDIATELY = 6;
+  COMMAND_TYPE_CONTINUE_ROUTE = 7;
+  COMMAND_TYPE_REROUTE = 8;
+}
+
+enum CommandPriority {
+  COMMAND_PRIORITY_UNKNOWN = 0;
+  COMMAND_PRIORITY_LOW = 1;
+  COMMAND_PRIORITY_NORMAL = 2;
+  COMMAND_PRIORITY_HIGH = 3;
+  COMMAND_PRIORITY_EMERGENCY = 4;
+}
+
+enum AircraftState {
+  AIRCRAFT_STATE_UNKNOWN = 0;
+  AIRCRAFT_STATE_GROUNDED = 1;
+  AIRCRAFT_STATE_TAXIING = 2;
+  AIRCRAFT_STATE_TAKEOFF = 3;
+  AIRCRAFT_STATE_CLIMBING = 4;
+  AIRCRAFT_STATE_CRUISING = 5;
+  AIRCRAFT_STATE_DESCENDING = 6;
+  AIRCRAFT_STATE_APPROACH = 7;
+  AIRCRAFT_STATE_LANDING = 8;
+  AIRCRAFT_STATE_LANDED = 9;
+}
+
+enum FuelStatus {
+  FUEL_STATUS_UNKNOWN = 0;
+  FUEL_STATUS_NORMAL = 1;
+  FUEL_STATUS_LOW = 2;
+  FUEL_STATUS_CRITICAL = 3;
+}
