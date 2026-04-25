@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package skytrac.telemetry;
+package telemetry;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "a2solution.ca/skytrac/proto/telemetry";
+option go_package = "a2solution.ca/skytrac/proto/generated;telemetry";
 
 service FlightTelemetryService {
   rpc SendAircraftTelemetry (AircraftTelemetry) returns (AircraftControlMessage);

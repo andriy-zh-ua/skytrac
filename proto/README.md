@@ -9,9 +9,9 @@ proto/
 ├── README.md                # This file
 ├── telemetry.proto          # Main telemetry definitions
 ├── generated/               # Auto-generated files (DO NOT EDIT)
-│   └── go/                  # Go generated files
-│       ├── telemetry.pb.go
-│       └── telemetry_grpc.pb.go
+│   ├── telemetry.pb.go      # Go protocol buffer implementation
+│   └── telemetry_grpc.pb.go # gRPC service definitions
+├── go.mod                   # Go module file (auto-generated)
 └── Makefile                 # Build commands
 ```
 
@@ -32,27 +32,42 @@ Contains enhanced telemetry message definitions with gRPC services:
 
 The `generated/` directory contains auto-generated files from the `.proto` files:
 
-### Go (`generated/go/`)
+### Go (`generated/`)
 - `telemetry.pb.go` - Go protocol buffer implementation
 - `telemetry_grpc.pb.go` - gRPC service definitions
 
 ## Build Commands
 
-Use the Makefile to generate the protobuf file:
+Use the Makefile to generate the protobuf files:
 
 ```bash
-# Generate Go file
+# Create directories only
+make setup-dirs
+
+# Install protobuf dependencies
+make install-deps
+
+# Initialize Go module only
+make init-module
+
+# Generate Go files (automatically creates go.mod if needed)
 make generate
 
-# Clean generated file
+# Clean generated files
 make clean
 ```
+
+The Makefile automatically:
+- Creates the `generated/` directory
+- Initializes a Go module (`go.mod`) if it doesn't exist
+- Generates both protobuf and gRPC Go files
+- Places them in the `generated/` directory with source-relative paths
 
 ## Usage
 
 ### Creating Telemetry Messages
 ```go
-import "a2solution.ca/skytrac/proto/telemetry"
+import "a2solution.ca/skytrac/proto/generated"
 import "google.golang.org/protobuf/types/known/timestamppb"
 
 // Create aircraft telemetry message
@@ -89,7 +104,7 @@ telemetry := &telemetry.AircraftTelemetry{
 
 ### gRPC Service Implementation
 ```go
-import "a2solution.ca/skytrac/proto/telemetry"
+import "a2solution.ca/skytrac/proto/generated"
 import "google.golang.org/grpc"
 
 // Server implementation
@@ -134,12 +149,34 @@ func sendTelemetry(client telemetry.FlightTelemetryServiceClient, telemetryMsg *
 }
 ```
 
+## Module Configuration
+
+### Go Package Option
+```protobuf
+option go_package = "a2solution.ca/skytrac/proto/generated;telemetry";
+```
+
+This configuration:
+- Sets the module path to `a2solution.ca/skytrac/proto/generated`
+- Uses `telemetry` as the Go package name
+- Enables proper module resolution with replace directives
+
+### Service Integration
+Services using this protobuf should include the following in their `go.mod`:
+
+```go
+// In service go.mod
+replace a2solution.ca/skytrac/proto => ../../../proto
+```
+
 ## Important Notes
 
 - **NEVER EDIT** files in the `generated/` directory
 - Always regenerate files after modifying `.proto` files
 - The `generated/` directory is added to `.gitignore`
 - Use the Makefile for consistent generation
+- **Automatic Module Creation**: The Makefile automatically creates `go.mod` if needed
 - **Google Protobuf Import**: Uses `google/protobuf/timestamp.proto` for standard timestamps
 - **gRPC Support**: Requires gRPC plugins for Go code generation
 - **Go Only**: This protobuf is configured for Go language generation only
+- **Replace Directive**: Services must use replace directive to point to local proto directory

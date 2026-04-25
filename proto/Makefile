@@ -1,6 +1,9 @@
 # Protocol Buffers Makefile for Skytrac Project
 
-.PHONY: help generate clean install-deps
+PROTO_DIR=.
+GEN_DIR=generated/
+
+.PHONY: help setup-dirs install-deps init-module generate clean
 
 # Default target
 help:
@@ -10,31 +13,40 @@ help:
 	@echo "  generate     - Generate Go protobuf files"
 	@echo "  clean        - Remove all generated files"
 
+# Create directories
+setup-dirs:
+	mkdir -p $(GEN_DIR)
+
 # Install dependencies
 install-deps:
-	@echo "Installing protobuf dependencies..."
+	echo "Installing protobuf dependencies..."
 	# Go dependencies
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
-# Create directories
-setup-dirs:
-	@mkdir -p generated/go
+# Initialize Go module
+init-module:
+	if [ ! -f go.mod ]; then \
+		echo "Initializing Go module..."; \
+		go mod init a2solution.ca/skytrac/proto; \
+	else \
+		echo "Go module already exists"; \
+	fi
 
 # Generate Go files
-generate: setup-dirs
+generate: setup-dirs init-module setup-dirs
 	@echo "Generating Go files..."
 	protoc \
-		--go_out=generated/go \
+		--proto_path=$(PROTO_DIR) \
+		--go_out=$(GEN_DIR) \
 		--go_opt=paths=source_relative \
-		--go-grpc_out=generated/go \
+		--go-grpc_out=$(GEN_DIR) \
 		--go-grpc_opt=paths=source_relative \
-		--proto_path=. \
-		telemetry.proto
-	@echo "Go files generated in generated/go/"
+		$(PROTO_DIR)/telemetry.proto
+	@echo "Go files generated in $(GEN_DIR)"
 
 # Clean generated files
 clean:
 	@echo "Cleaning generated files..."
-	rm -rf generated/
+	rm -rf $(GEN_DIR)
 	@echo "Clean complete!"
