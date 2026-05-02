@@ -250,7 +250,6 @@ const ProducerNode = props => {
     }
   }, [props.data?.active]);
 
-  console.log('nodeTypes ref changed');
   return (
     <div
       onClick={() => selectNode && selectNode(id)}

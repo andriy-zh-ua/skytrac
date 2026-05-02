@@ -11,7 +11,7 @@ class TelemetryService {
 
   // Initialize aircraft movement state
   initializeAircraftMovement(producerId, aircraft) {
-    if (!aircraft.routeDistance || !aircraft.stepCoordinates || aircraft.stepCoordinates.length < 2) {
+    if (/*!aircraft.routeDistance ||*/ !aircraft.stepCoordinates || aircraft.stepCoordinates.length < 2) {
       console.warn(`Aircraft ${producerId} has incomplete route data`);
       return null;
     }
@@ -112,20 +112,20 @@ class TelemetryService {
     let currentLocation;
     if (movementUpdate.isCompleted) {
       // Aircraft has reached destination
-      currentLocation = aircraft.routeCalculator.getCoordinatesAtDistance(
-        aircraft.routeCalculator.getTotalDistance()
+      currentLocation = aircraftState.routeCalculator.getCoordinatesAtDistance(
+        aircraftState.routeCalculator.getTotalDistance()
       );
     } else {
-      currentLocation = aircraft.routeCalculator.getCoordinatesAtDistance(
+      currentLocation = aircraftState.routeCalculator.getCoordinatesAtDistance(
         movementUpdate.position
       );
     }
 
     // Round to nearest route segment
-    const roundedLocation = aircraft.routeCalculator.roundToNearestSegment(currentLocation);
+    const roundedLocation = aircraftState.routeCalculator.roundToNearestSegment(currentLocation);
     
     // Get current bearing
-    const bearing = aircraft.routeCalculator.getCurrentBearing(movementUpdate.position);
+    const bearing = aircraftState.routeCalculator.getCurrentBearing(movementUpdate.position);
     
     // Generate realistic telemetry data
     const telemetryData = {
@@ -148,7 +148,7 @@ class TelemetryService {
         time_elapsed: Math.round(movementUpdate.timeElapsed),
         is_completed: movementUpdate.isCompleted,
         distance_traveled: Math.round(movementUpdate.position),
-        remaining_distance: Math.round(aircraft.routeCalculator.getTotalDistance() - movementUpdate.position)
+        remaining_distance: Math.round(aircraftState.routeCalculator.getTotalDistance() - movementUpdate.position)
       }
     };
 
@@ -211,8 +211,21 @@ class TelemetryService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
-      console.log(`Telemetry sent from aircraft ${producerId}:`, result);
+      // Try to parse JSON response, but don't fail if it's empty
+      let result;
+      try {
+        const text = await response.text();
+        if (text) {
+          result = JSON.parse(text);
+        } else {
+          result = { success: true };
+        }
+      } catch (jsonError) {
+        console.warn(`Non-JSON response from backend:`, jsonError);
+        result = { success: true };
+      }
+      
+      console.log(`Telemetry sent successfully for aircraft ${producerId}:`, result);
 
     } catch (error) {
       console.error(`Failed to send telemetry from aircraft ${producerId}:`, error);

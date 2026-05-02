@@ -27,30 +27,30 @@ class RouteCoordinateCalculator {
   }
   
   // Calculate distances between consecutive segments
-  // calculateSegmentDistances() {
-  //   const distances = [];
-  //   for (let i = 1; i < this.routeSegments.length; i++) {
-  //     const dist = this.calculateDistance(
-  //       this.routeSegments[i-1].lat,
-  //       this.routeSegments[i-1].lon,
-  //       this.routeSegments[i].lat,
-  //       this.routeSegments[i].lon
-  //     );
-  //     distances.push(dist);
-  //   }
-  //   return distances;
-  // }
+  calculateSegmentDistances() {
+    const distances = [];
+    for (let i = 1; i < this.routeSegments.length; i++) {
+      const dist = this.calculateDistance(
+        this.routeSegments[i-1].lat,
+        this.routeSegments[i-1].lon,
+        this.routeSegments[i].lat,
+        this.routeSegments[i].lon
+      );
+      distances.push(dist);
+    }
+    return distances;
+  }
   
   // Calculate cumulative distances from start
-  // calculateCumulativeDistances() {
-  //   const cumulative = [0];
-  //   let total = 0;
-  //   for (let i = 0; i < this.segmentDistances.length; i++) {
-  //     total += this.segmentDistances[i];
-  //     cumulative.push(total);
-  //   }
-  //   return cumulative;
-  // }
+  calculateCumulativeDistances() {
+    const cumulative = [0];
+    let total = 0;
+    for (let i = 0; i < this.segmentDistances.length; i++) {
+      total += this.segmentDistances[i];
+      cumulative.push(total);
+    }
+    return cumulative;
+  }
   
   // Get coordinates at specific distance from start
   getCoordinatesAtDistance(targetDistance) {
@@ -116,14 +116,14 @@ class RouteCoordinateCalculator {
   }
   
   // Get segment index at specific distance
-  // getSegmentIndexAtDistance(targetDistance) {
-  //   for (let i = 1; i < this.cumulativeDistances.length; i++) {
-  //     if (this.cumulativeDistances[i] >= targetDistance) {
-  //       return i - 1;
-  //     }
-  //   }
-  //   return this.routeSegments.length - 1;
-  // }
+  getSegmentIndexAtDistance(targetDistance) {
+    for (let i = 1; i < this.cumulativeDistances.length; i++) {
+      if (this.cumulativeDistances[i] >= targetDistance) {
+        return i - 1;
+      }
+    }
+    return this.cumulativeDistances.length - 2;
+  }
   
   // Get total route distance
   getTotalDistance() {
@@ -131,28 +131,26 @@ class RouteCoordinateCalculator {
   }
   
   // Get route progress percentage
-  // getProgressPercentage(currentDistance) {
-  //   return (currentDistance / this.getTotalDistance()) * 100;
-  // }
+  getProgressPercentage(currentDistance) {
+    return (currentDistance / this.getTotalDistance()) * 100;
+  }
   
   // Get bearing between two points
-  // calculateBearing(startLat, startLon, endLat, endLon) {
-  //   const dLon = this.toRadians(endLon - startLon);
-  //   const lat1 = this.toRadians(startLat);
-  //   const lat2 = this.toRadians(endLat);
-    
-  //   const y = Math.sin(dLon) * Math.cos(lat2);
-  //   const x = Math.cos(lat1) * Math.sin(lat2) -
-  //             Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-    
-  //   const bearing = Math.atan2(y, x);
-  //   return (this.toDegrees(bearing) + 360) % 360;
-  // }
+  calculateBearing(startLat, startLon, endLat, endLon) {
+    const dLon = this.toRadians(endLon - startLon);
+    const lat1 = this.toRadians(startLat);
+    const lat2 = this.toRadians(endLat);
+    const y = Math.sin(dLon) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) -
+            Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+    const bearing = Math.atan2(y, x);
+    return (this.toDegrees(bearing) + 360) % 360;
+  }
   
   // Convert radians to degrees
-  // toDegrees(radians) {
-  //   return radians * (180 / Math.PI);
-  // }
+  toDegrees(radians) {
+    return radians * (180 / Math.PI);
+  }
   
   // Get current bearing based on position
   getCurrentBearing(currentDistance) {

@@ -130,13 +130,13 @@ const App = () => {
     return {
       start: flightState.start,
       destination: flightState.destination,
-      stepCoordinates: flightState.stepCoordinates
+      stepCoordinates: flightState.stepCoordinates,
+      routeDistance: flightState.routeDistance
     };
   }, []);
 
   // Update edge styles based on producer state
   const updateEdgeStyles = useCallback((producerId, isActive) => {
-    console.log('6................................UPDATING EDGE STYLES FOR PRODUCER:', producerId, 'ACTIVE:', isActive);
     setEdges((eds) => {
       const updatedEdges = eds.map(edge => {
         if (edge.source === producerId) {
@@ -155,12 +155,10 @@ const App = () => {
             },
             className: isActive ? 'running-producer' : undefined
           };
-          console.log(`🎨 Updated edge ${edge.id} for producer ${producerId}:`, newEdge);
           return newEdge;
         }
         return edge;
       });
-      console.log(`🎨 Total edges after update:`, updatedEdges.length);
       return updatedEdges;
     });
   }, [setEdges]);
@@ -191,12 +189,10 @@ const App = () => {
     // Update edge styles back to inactive state
     updateEdgeStyles(producerId, false);
     
-    // Telemetry is now handled directly by ProducerNode component
-    // Disabled telemetryService to prevent conflicts
-    console.log(`Producer ${producerId} deactivated - telemetry handled by ProducerNode`);
-    
-    // telemetryService.stopTelemetryTransmission(producerId);
-  }, [updateEdgeStyles]);
+    // Stop telemetry transmission
+    telemetryService.stopTelemetryTransmission(producerId);
+    console.log(`Producer ${producerId} deactivated - telemetry stopped`);
+  }, [updateEdgeStyles, telemetryService]);
 
   // Selection function - select one node, deselect others, and track current objects
   const selectNode = (nodeId, preserveBroker = false) => {
@@ -272,8 +268,6 @@ const App = () => {
         }
       }, edges);
       
-      console.log('................................UPDATED EDGES:', newEdges);
-      
       // Automatically select the producer if this is a producer connection
       const producerNode = nodes.find(node => node.id === params.source && node.type === 'producer');
       if (producerNode && !producerNode.selected) {
@@ -285,36 +279,6 @@ const App = () => {
     },
     [setEdges, setNodes, nodes, edges, selectNode]
   );
-  // const onConnect = useCallback((params) => {
-  //   setEdges((eds) => {
-  //     const newEdges = addEdge({
-  //       ...params,
-  //       style: { 
-  //         stroke: '#b1b1b7',
-  //         strokeWidth: 2,
-  //       },
-  //       markerEnd: {
-  //         type: 'arrowclosed',
-  //         color: '#b1b1b7',
-  //       }
-  //     }, eds);
-
-  //     console.log('UPDATED EDGES:', newEdges);
-
-  //     return newEdges;
-  //   });
-
-  //   // Keep your selection logic (important)
-  //   const producerNode = nodes.find(
-  //     node => node.id === params.source && node.type === 'producer'
-  //   );
-
-  //   if (producerNode && !producerNode.selected) {
-  //     selectNode(params.source);
-  //   }
-
-  // }, [setEdges, nodes, selectNode]);
-
   
   // Handle aircraft selection from FlightRouteMap
   const handleAircraftSelect = useCallback((producerId) => {
@@ -388,7 +352,6 @@ const App = () => {
     // Use Kafka Integration to create standalone topic
     const kafkaResult = kafkaIntegration.handleAddStandaloneTopic(newPosition, duplicateConfig);
     
-    console.log('5................................KAFKA RESULT:', kafkaResult);
     // Update React Flow nodes and edges
     setNodes(kafkaResult.nodes);
     setEdges(kafkaResult.edges);
@@ -469,7 +432,6 @@ const calculateConsumerPosition = (nodes) => {
       // Add broker to Kafka Integration
       kafkaResult = kafkaIntegration.handleAddBroker(position);
 
-      console.log('4................................KAFKA RESULT:', kafkaResult);
       // Update React Flow nodes and edges from KafkaIntegration
       setNodes(kafkaResult.nodes);
       setEdges(kafkaResult.edges);
@@ -494,7 +456,6 @@ const calculateConsumerPosition = (nodes) => {
         brokerId: currentObjects.broker
       });
 
-      console.log('3................................KAFKA RESULT:', kafkaResult);
       // Update React Flow nodes and edges from KafkaIntegration
       setNodes(kafkaResult.nodes);
       setEdges(kafkaResult.edges);
@@ -520,7 +481,6 @@ const calculateConsumerPosition = (nodes) => {
         brokerId: currentObjects.broker
       });
       
-      console.log('2................................KAFKA RESULT:', kafkaResult);
       // Update React Flow nodes and edges from KafkaIntegration
       setNodes(kafkaResult.nodes);
       setEdges(kafkaResult.edges);
@@ -583,7 +543,6 @@ const calculateConsumerPosition = (nodes) => {
       setNodes(kafkaResult.nodes);
       // Preserve existing manual edges while adding new ones from KafkaIntegration
       setEdges((currentEdges) => {
-        console.log('1................................CURRENT EDGES:', currentEdges);
         const existingEdgeIds = new Set(currentEdges.map(e => `${e.source}-${e.target}`));
         const newEdges = kafkaResult.edges.filter(e => 
           !existingEdgeIds.has(`${e.source}-${e.target}`)

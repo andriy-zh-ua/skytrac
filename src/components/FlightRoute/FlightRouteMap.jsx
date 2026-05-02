@@ -399,7 +399,8 @@ const FlightRouteMap = ({ onRouteUpdate, initialCenter = [OTTAWA_AIRPORT_LAT, OT
     return {
       start: ac?.startPoint ? { lat: ac.startPoint.lat, lon: ac.startPoint.lng } : null,
       destination: ac?.destinationPoint ? { lat: ac.destinationPoint.lat, lon: ac.destinationPoint.lng } : null,
-      stepCoordinates: ac?.stepCoordinates || []
+      stepCoordinates: ac?.stepCoordinates || [],
+      routeDistance: ac?.routeDistance || 0
     };
   }, [selectedAircraft]);
 
