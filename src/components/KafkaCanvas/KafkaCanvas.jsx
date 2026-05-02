@@ -1,9 +1,11 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { Box } from '@mui/material';
 import { ReactFlow, useReactFlow } from '@xyflow/react';
-import { NodeTypes } from './NodeTypes.jsx';
+// import { NodeTypes } from './NodeTypes.jsx';
 import { CanvasControls } from './CanvasControls.jsx';
 import { KafkaTopic } from '../../kafka-designer/KafkaTopic.js';
+import { nodeTypes } from './NodeTypes.jsx';
+import { TelemetryGenerator } from '../../services/telemetryGenerator';
 
 export const KafkaCanvas = ({ 
   nodes, 
@@ -20,7 +22,16 @@ export const KafkaCanvas = ({
   onProducerActivate,
   onProducerDeactivate
 }) => {
-  const { getIntersectingNodes } = useReactFlow();
+  const { getIntersectingNodes, getEdges } = useReactFlow();
+  
+  // Expose React Flow helper globally for edge access
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.reactFlowHelper = {
+        getEdges
+      };
+    }
+  }, [getEdges]);
 
   // Check if a producer has connections (edges)
   const hasProducerConnections = useCallback((producerId) => {
@@ -53,7 +64,21 @@ export const KafkaCanvas = ({
         updateEdgeStyles(producerId, true);
       }
       
-      // Trigger telemetry transmission
+      // // Trigger telemetry transmission
+      // if (onProducerActivate) {
+      //   onProducerActivate(producerId);
+      // }
+      const producer = kafkaIntegration?.cluster?.getProducer(producerId);
+
+      if (producer) {
+        const generator = new TelemetryGenerator(producerId);
+        producer.startTelemetry(generator);
+        // producer.startTelemetry(() => ({
+        //   id: producerId,
+        //   timestamp: new Date().toISOString()
+        // }));
+      }
+
       if (onProducerActivate) {
         onProducerActivate(producerId);
       }
@@ -86,9 +111,14 @@ export const KafkaCanvas = ({
         updateEdgeStyles(producerId, false);
       }
       
-      // Stop flight route streaming
-      if (onProducerDeactivate) {
-        onProducerDeactivate(producerId);
+      // // Stop flight route streaming
+      // if (onProducerDeactivate) {
+      //   onProducerDeactivate(producerId);
+      // }
+      const producer = kafkaIntegration?.cluster?.getProducer(producerId);
+
+      if (producer) {
+        producer.stopTelemetry();
       }
     }
   }, [nodes, onNodesChange, updateEdgeStyles, onProducerDeactivate]);
@@ -284,47 +314,48 @@ export const KafkaCanvas = ({
   }, [getIntersectingNodes, onNodesChange, nodes, selectNode, kafkaIntegration]);
   
   // Enhanced NodeTypes with injected functions
-  const EnhancedNodeTypes = useCallback(() => ({
-    broker: props => (
-      <NodeTypes.Broker 
-        {...props} 
-        selectNode={selectNode}
-        currentObjects={currentObjects}
-      />
-    ),
-    producer: props => (
-      <NodeTypes.Producer 
-        {...props} 
-        selectNode={selectNode}
-        currentObjects={currentObjects}
-        hasConnections={hasProducerConnections(props.id)}
-        activateProducer={activateProducer}
-        deactivateProducer={deactivateProducer}
-      />
-    ),
-    topic: props => (
-      <NodeTypes.Topic 
-        {...props} 
-        selectNode={selectNode}
-        currentObjects={currentObjects}
-        onDuplicateTopic={onDuplicateTopic}
-      />
-    ),
-    consumer: props => (
-      <NodeTypes.Consumer 
-        {...props} 
-        selectNode={selectNode}
-        currentObjects={currentObjects}
-      />
-    ),
-    partition: props => (
-      <NodeTypes.Partition 
-        {...props} 
-        selectNode={selectNode}
-        currentObjects={currentObjects}
-      />
-    ),
-  }), [selectNode, currentObjects, hasProducerConnections, activateProducer, deactivateProducer, onDuplicateTopic])();
+  // const EnhancedNodeTypes = useMemo(() => ({
+  //   broker: props => (
+  //     <NodeTypes.Broker 
+  //       {...props} 
+  //       selectNode={selectNode}
+  //       currentObjects={currentObjects}
+  //     />
+  //   ),
+  //   producer: props => (
+  //     <NodeTypes.Producer 
+  //       {...props} 
+  //       selectNode={selectNode}
+  //       currentObjects={currentObjects}
+  //       hasConnections={hasProducerConnections(props.id)}
+  //       activateProducer={activateProducer}
+  //       deactivateProducer={deactivateProducer}
+  //     />
+  //   ),
+  //   topic: props => (
+  //     <NodeTypes.Topic 
+  //       {...props} 
+  //       selectNode={selectNode}
+  //       currentObjects={currentObjects}
+  //       onDuplicateTopic={onDuplicateTopic}
+  //     />
+  //   ),
+  //   consumer: props => (
+  //     <NodeTypes.Consumer 
+  //       {...props} 
+  //       selectNode={selectNode}
+  //       currentObjects={currentObjects}
+  //     />
+  //   ),
+  //   partition: props => (
+  //     <NodeTypes.Partition 
+  //       {...props} 
+  //       selectNode={selectNode}
+  //       currentObjects={currentObjects}
+  //     />
+  //   ),
+  // }), [selectNode, currentObjects, hasProducerConnections, activateProducer, deactivateProducer, onDuplicateTopic]);
+
   return (
     <Box sx={{ flexGrow: 1, height: '100%' }}>
       <ReactFlow
@@ -336,7 +367,8 @@ export const KafkaCanvas = ({
         onPaneClick={handlePaneClick}
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
-        nodeTypes={EnhancedNodeTypes}
+        // nodeTypes={EnhancedNodeTypes}
+        nodeTypes={nodeTypes}
         fitView
       >
         <CanvasControls />

@@ -100,4 +100,50 @@ export class KafkaProducer {
     producer.isConnected = data.isConnected || false;
     return producer;
   }
+
+  // startTelemetry(generateFn) {
+  //   if (this.interval) return; // prevent duplicates
+
+  //   this.connect();
+
+  //   console.log(`🚀 [KafkaProducer] Starting telemetry for ${this.id}`);
+
+  //   this.interval = setInterval(async () => {
+  //     try {
+  //       const message = generateFn();
+  //       await this.produce(message);
+  //     } catch (err) {
+  //       console.error(`❌ Telemetry error for ${this.id}:`, err);
+  //     }
+  //   }, 1000);
+  // }
+  startTelemetry(generator) {
+    if (this.interval) return;
+
+    this.connect();
+
+    console.log(`🚀 [KafkaProducer] Starting telemetry for ${this.id}`);
+
+    this.interval = setInterval(async () => {
+      console.log(`Sending telemetry message for ${this.id}...`);
+      const message = generator.generate();
+
+      try {
+        await this.produce(message);
+      } catch (err) {
+        console.error(`❌ Telemetry error for ${this.id}:`, err);
+      }
+    }, 1000);
+  }
+
+  stopTelemetry() {
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
+    }
+
+    this.disconnect();
+
+    console.log(`🛑 [KafkaProducer] Stopped telemetry for ${this.id}`);
+  }
 }
